@@ -1,3 +1,13 @@
+--[[
+
+   Awesome WM Widget Helper
+   Distopico Vegan <distopico [at] riseup [dot] net>
+   Licensed under GPL3
+
+   Original from: https://github.com/mrzapp/awesomerc
+
+--]]
+
 local wibox = require("wibox")
 local helpers = {}
 

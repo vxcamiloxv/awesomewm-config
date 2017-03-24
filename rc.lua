@@ -1,3 +1,11 @@
+--[[
+
+   Awesome WM Configuration 1.1
+   Distopico Vegan <distopico [at] riseup [dot] net>
+   Licensed under GPL3
+
+--]]
+
 -- Standard awesome library
 local gears = require("gears")
 local awful = require("awful")

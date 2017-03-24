@@ -1,3 +1,11 @@
+--[[
+
+   Awesome WM CPUFreq Widget
+   Distopico Vegan <distopico [at] riseup [dot] net>
+   Licensed under GPL3
+
+--]]
+
 local awful = require("awful")
 local wibox = require("wibox")
 local helpers = require("widgets/helpers")

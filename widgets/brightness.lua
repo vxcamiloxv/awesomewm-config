@@ -1,3 +1,12 @@
+--[[
+
+   Awesome WM Brightness Widget
+   Distopico Vegan <distopico [at] riseup [dot] net>
+   Licensed under GPL3
+
+   @author Tyler Compton <https://github.com/velovix/awesome.brightness-widget>
+
+--]]
 local wibox = require("wibox")
 local awful = require("awful")
 local naughty = require("naughty")
@@ -5,9 +14,9 @@ local helpers = require("widgets/helpers")
 math = require("math")
 string = require("string")
 
-local Brightness = { mt = {}, wmt = {} }
-Brightness.wmt.__index = Brightness
-Brightness.__index = Brightness
+local widget = { mt = {}, wmt = {} }
+widget.wmt.__index = widget
+widget.__index = widget
 
 config = awful.util.getdir("config")
 
@@ -18,7 +27,7 @@ local function run(command)
    return result
 end
 
-function Brightness:new(args)
+function widget:new(args)
    local obj = setmetatable({}, self)
 
    obj.step = args.step or 5
@@ -53,11 +62,11 @@ function Brightness:new(args)
    return obj
 end
 
-function Brightness:tooltipText()
+function widget:tooltipText()
    return math.floor(self:get()).."% Brightness"
 end
 
-function Brightness:update(status)
+function widget:update(status)
    local brightness = math.floor(self:get())
    local iconpath = config.."/theme/icons/status/brightness"
 
@@ -93,7 +102,7 @@ function Brightness:update(status)
    self.brightness = brightness
 end
 
-function Brightness:updateDelay()
+function widget:updateDelay()
    local timer = timer({timeout = time or 0})
 
    timer:connect_signal("timeout", function()
@@ -103,25 +112,25 @@ function Brightness:updateDelay()
    timer:start()
 end
 
-function Brightness:up()
+function widget:up()
    run(self.cmd.." "..self.incVal.." "..self.step)
    self:updateDelay(0.1)
 end
 
-function Brightness:down()
+function widget:down()
    run(self.cmd.." "..self.decVal.." "..self.step)
    self:updateDelay(0.1)
 end
 
-function Brightness:get()
+function widget:get()
    return run(self.cmd.." "..self.getVal)
 end
 
-function Brightness:set(val)
+function widget:set(val)
    run(self.cmd.." "..self.setVal.." "..val)
 end
 
-function Brightness:popupShow(timeout)
+function widget:popupShow(timeout)
    local icon = self.iconpath
    local tooltipText = self:tooltipText()
    self:popupHide()
@@ -133,15 +142,15 @@ function Brightness:popupShow(timeout)
    })
 end
 
-function Brightness:popupHide()
+function widget:popupHide()
    if self.popup ~= nil then
       naughty.destroy(self.popup)
       self.popup = nil
    end
 end
 
-function Brightness.mt:__call(...)
-   return Brightness.new(...)
+function widget.mt:__call(...)
+   return widget.new(...)
 end
 
-return Brightness:new({})
+return widget:new({})

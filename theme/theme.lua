@@ -1,6 +1,10 @@
----------------------------
--- Default awesome theme --
----------------------------
+--[[
+
+   Awesome WM Tron Legacy Theme 1.5
+   Distopico Vegan <distopico [at] riseup [dot] net>
+   Licensed under GPL3
+
+--]]
 
 theme                                         = {}
 theme.theme_path                              = os.getenv("HOME") .. "/.config/awesome/theme"

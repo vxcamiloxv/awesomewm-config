@@ -1,10 +1,19 @@
+--[[
+
+   Awesome WM Volumen Widget
+   Distopico Vegan <distopico [at] riseup [dot] net>
+   Licensed under GPL3
+
+   Original from: https://github.com/mrzapp/awesomerc
+
+--]]
+
 local wibox = require("wibox")
 local awful = require("awful")
 local naughty = require("naughty")
 local helpers = require("widgets/helpers")
 
 local widget = {}
-
 local popup = nil
 local volumetext = "--"
 local volumecurrent = nil
