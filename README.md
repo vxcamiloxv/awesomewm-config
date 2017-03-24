@@ -24,6 +24,7 @@ Installation
 ```shell
   git clone https://notabug.org/distopico/awesomewm-config.git $HOME/.config/awesome
   git submodule init && git submodule sync
+```
 
 License
 -------
