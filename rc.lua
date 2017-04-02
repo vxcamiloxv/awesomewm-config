@@ -699,15 +699,16 @@ end
 awful.rules.rules = {
    -- All clients will match this rule.
    { rule = { },
-     properties = { border_width = beautiful.border_width,
-                    border_color = beautiful.border_normal,
-                    focus = awful.client.focus.filter,
-                    raise = true,
-                    keys = clientkeys,
-                    buttons = clientbuttons,
-                    screen = awful.screen.preferred,
-                    titlebars_enabled = false,
-                    placement = awful.placement.no_overlap+awful.placement.no_offscreen
+     properties = {
+        border_width = beautiful.border_width,
+        border_color = beautiful.border_normal,
+        focus = awful.client.focus.filter,
+        raise = true,
+        keys = clientkeys,
+        buttons = clientbuttons,
+        screen = awful.screen.preferred,
+        titlebars_enabled = false,
+        placement = awful.placement.no_overlap+awful.placement.no_offscreen
      }
    },
    -- Floating clients.
@@ -738,6 +739,7 @@ awful.rules.rules = {
 
    -- Add titlebars to normal clients and dialogs
    { rule_any = {type = { "dialog" }},
+     except_any = {role = { "notify_dialog" }},
      properties = { titlebars_enabled = true }
    },
    -- Custom
@@ -749,13 +751,13 @@ awful.rules.rules = {
      properties = { tag = "6", floating = true } },
    { rule = { instance = "owncloud" },
      properties = { floating = true } },
-   { rule = { class = "URxvt" },
+   { rule_any = { class = {"URxvt", ".*ermina.*"} },
      properties = { tag = "2", size_hints_honor = false } },
    { rule = { class = "Emacs" },
      properties = { tag = "3", switchtotag = true, size_hints_honor = false } },
    { rule = { instance = "Ranger" },
      properties = { tag = "6", switchtotag = true, size_hints_honor = false } },
-   { rule_any = { class = {"Iceweasel", "inox"} },
+   { rule_any = { role = {"browser"}, class = { "Epiphany" }},
      properties = { tag = "4" } },
    {rule = {instance = "Pidgin"},
     properties = { tag = "5", size_hints_honor = false, floating = true }},
