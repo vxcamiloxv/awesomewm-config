@@ -5,10 +5,44 @@
    Licensed under GPL3
 
 --]]
+local awful = require("awful")
 
+-- Theme basic --
+local theme_path = os.getenv("HOME") .. "/.config/awesome/theme"
+local theme_wallpaper = theme_path .. "/wall.jpg"
+
+-- Load wallpaper from different locations --
+local wall_directories = {
+   os.getenv("HOME") .. "/Pictures/Wallpapers",
+   os.getenv("HOME") .. "/Pictures"
+}
+
+for i=1, #wall_directories do
+   local dir = wall_directories[i]
+
+   if awful.util.file_readable(theme_path .. "/_wall.jpg") then
+      theme_wallpaper = theme_path .. "/_wall.jpg"
+      break
+   end
+   if awful.util.file_readable(dir .. "/wall.png") then
+      theme_wallpaper = dir .. "/wall.png"
+      break
+   elseif awful.util.file_readable(dir .. "/wall.jpg") then
+      theme_wallpaper = dir .. "/wall.jpg"
+      break
+   elseif awful.util.file_readable(dir .. "/wallpaper.png") then
+      theme_wallpaper = dir .. "/wallpaper.png"
+      break
+   elseif awful.util.file_readable(dir .. "/wallpaper.jpg") then
+      theme_wallpaper = dir .. "/wallpaper.jpg"
+      break
+   end
+end
+
+-- | THEME | --
 theme                                         = {}
-theme.theme_path                              = os.getenv("HOME") .. "/.config/awesome/theme"
-theme.wallpaper                               = os.getenv("HOME") .. "/Pictures/Wallpapers/Space/wallpaper8534.jpg"
+theme.theme_path                              = theme_path
+theme.wallpaper                               = theme_wallpaper
 theme.icon_theme                              = "Moka"
 
 theme.font                                    = "Hack 8"
