@@ -67,7 +67,7 @@ cyclefocus.naughty_preset = {
    border_width = 1,
    border_color = "#001E21",
    fg = "#00ffff",
-   bg = "#001214",
+   bg = "#001214"
 }
 naughty.config.defaults.fg = "#6F6F6F"
 naughty.config.defaults.bg = "#ffffff"
@@ -80,7 +80,7 @@ wallmenu = {}
 --Configure home path so you dont have too
 home_path  = os.getenv("HOME") .. "/"
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init("~/.config/awesome/theme/theme.lua")
+beautiful.init(home_path .. "/.config/awesome/theme/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "urxvtc" or "urxvt" or "terminator" or "gnome-terminal" or "xterm"
@@ -118,7 +118,11 @@ local function client_menu_toggle_fn()
 end
 
 local system_lock = function ()
-   awful.spawn("cinnamon-screensaver-command -l")
+   awful.spawn("xdg-screensaver lock")
+   --[[
+   dbus-send --session --dest=org.freedesktop.ScreenSaver --type=method_call
+   --print-reply --reply-timeout=20000 /ScreenSaver org.freedesktop.ScreenSaver.Lock
+   --]]
 end
 
 local system_suspend = function ()
@@ -188,7 +192,7 @@ local system_power_off = function ()
 end
 
 local wall_load = function(wall)
-   local f = io.popen("ln -sfn " .. home_path .. "Pictures/Wallpapers/" .. wall .. " " .. home_path .. ".config/awesome/theme/wall.png")
+   local f = io.popen("ln -sfn " .. home_path .. "Pictures/Wallpapers/" .. wall .. " " .. home_path .. ".config/awesome/theme/_wall.jpg")
    awesome.restart()
 end
 
@@ -198,6 +202,11 @@ local wall_menu = function()
       local item = { l, function () wall_load(l) end }
       table.insert(wallmenu, item)
    end
+   table.insert(wallmenu, {
+                   "Default",
+                   function ()
+                      awful.spawn.with_shell("rm " .. home_path .. ".config/awesome/theme/_wall.jpg")
+                      awesome.restart() end})
    f:close()
 end
 
@@ -870,15 +879,15 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- }}}
 
 -- {{{ Autorun apps
-awful.spawn.with_shell("pgrep udiskie || udiskie --smart-tray --notify", false)
-awful.spawn.with_shell("pgrep kupfer || kupfer --no-splash", false)
-awful.spawn.with_shell("xrandr --setprovideroffloadsink nouveau Intel", false)
-awful.spawn.with_shell("pgrep owncloud || owncloud", false)
-awful.spawn.with_shell("pgrep clipit || clipit", false)
-awful.spawn.with_shell("pgrep emacs || emacs --daemon --no-splash", false)
-awful.spawn.with_shell("pgrep urxvtd || urxvtd -q -o", false)
-awful.spawn.with_shell("cinnamon-screensaver", false)
-awful.spawn.with_shell("pgrep xss-lock || xss-lock -- cinnamon-screensaver-command --lock &", false)
-awful.spawn.with_shell("pgrep redshift || redshift", false)
-awful.spawn.with_shell("pgrep xautolock || xautolock -detectsleep -notify 300 -notifier 'xset dpms force off' -time 10 -locker 'cinnamon-screensaver-command -l' -killtime 30 -killer 'systemctl suspend'", false)
+-- awful.spawn.with_shell("pgrep udiskie || udiskie --smart-tray --notify", false)
+-- awful.spawn.with_shell("pgrep kupfer || kupfer --no-splash", false)
+-- awful.spawn.with_shell("xrandr --setprovideroffloadsink nouveau Intel", false)
+-- awful.spawn.with_shell("pgrep owncloud || owncloud", false)
+-- awful.spawn.with_shell("pgrep clipit || clipit", false)
+-- awful.spawn.with_shell("pgrep emacs || emacs --daemon --no-splash", false)
+-- awful.spawn.with_shell("pgrep urxvtd || urxvtd -q -o", false)
+-- awful.spawn.with_shell("light-locker", false)
+-- awful.spawn.with_shell("pgrep xss-lock || xss-lock -- light-locker-command --lock &", false)
+-- awful.spawn.with_shell("pgrep redshift || redshift", false)
+-- awful.spawn.with_shell("pgrep xautolock || xautolock -detectsleep -notify 300 -notifier 'xset dpms force off' -time 10 -locker 'light-locker-command -l' -killtime 30 -killer 'systemctl suspend'", false)
 -- }}}
