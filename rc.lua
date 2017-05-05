@@ -717,7 +717,7 @@ awful.rules.rules = {
         buttons = clientbuttons,
         screen = awful.screen.preferred,
         titlebars_enabled = false,
-        placement = awful.placement.no_overlap+awful.placement.no_offscreen
+        placement = awful.placement.no_overlap+awful.placement.no_offscreen 
      }
    },
    -- Floating clients.
@@ -749,7 +749,7 @@ awful.rules.rules = {
    -- Add titlebars to normal clients and dialogs
    { rule_any = {type = { "dialog" }},
      except_any = {role = { "notify_dialog" }},
-     properties = { titlebars_enabled = true }
+     properties = { titlebars_enabled = true, floating = true, placement = awful.placement.under_mouse+awful.placement.no_offscreen }
    },
    -- Custom
    { rule = { class = "MPlayer" },
