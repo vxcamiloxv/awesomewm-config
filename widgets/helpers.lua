@@ -40,37 +40,57 @@ function helpers:set_draw_method(imagebox, scale)
    -- end
 end
 
+function helpers:run(command)
+   local prog = io.popen(command)
+   local result = prog:read('*all')
+   prog:close()
+   return result
+end
+
 function helpers:delay(func, time)
-    local timer = timer({timeout = time or 0})
+   local timer = timer({timeout = time or 0})
 
-    timer:connect_signal("timeout", function()
-        func()
-        timer:stop()
-    end)
+   timer:connect_signal("timeout", function()
+                           func()
+                           timer:stop()
+   end)
 
-    timer:start()
+   timer:start()
 end
 
 function helpers:listen(widget, interval)
-    widget:update()
+   widget:update()
 
-    -- Timer
-    local timer = timer({timeout = interval or 30})
+   if widget._timer ~= nil then
+      widget._timer:stop()
+   end
 
-    timer:connect_signal("timeout", function()
-        widget:update()
-    end)
+   -- Timer
+   local timer = timer({timeout = interval or 30})
+   widget._timer = timer
 
-    timer:start()
+   timer:connect_signal("timeout", function()
+                           widget:update()
+   end)
+
+   timer:start()
 end
 
 function helpers:test(cmd)
-    local test = io.popen(cmd)
-    local result = test:read() ~= nil
+   local test = io.popen(cmd)
+   local result = test:read() ~= nil
 
-    test:close()
+   test:close()
 
-    return result
+   return result
+end
+
+function helpers:exists(path)
+   local content = io.open(path, "rb")
+   if content then
+      content:close()
+   end
+   return content ~= nil
 end
 
 -- {{{ Expose path as a Lua table

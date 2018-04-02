@@ -13,6 +13,7 @@ local awful = require("awful")
 local naughty = require("naughty")
 local helpers = require("widgets/helpers")
 
+local config = awful.util.getdir("config")
 local widget = {}
 local popup = nil
 local volumetext = "--"
@@ -35,16 +36,13 @@ widget._icon:buttons(awful.util.table.join(
 
 -- {{{ Update method
 function widget:update()
-   local fd = io.popen("amixer sget Master")
-   local status = fd:read("*all")
-   fd:close()
-
+   local status = helpers:run("amixer sget Master")
    local volume = tonumber(string.match(status, "(%d?%d?%d)%%")) or 0
    volumetext = volume .. "% Volume"
 
    widget.text:set_markup(volumetext)
 
-   iconpath = "/usr/share/icons/gnome/scalable/status/audio-volume"
+   iconpath = config.."/theme/icons/status/audio-volume"
 
    if string.find(status, "[off]", 1, true) or volume <= 0.0 then
       iconpath = iconpath .. "-muted"
@@ -75,11 +73,13 @@ end
 
 function widget:showPopup(timeout)
    widget.hidePopup()
-   popup = naughty.notify({ icon = iconpath,
-                            icon_size = 16,
-                            text = volumetext,
-                            timeout = timeout, hover_timeout = 0.5,
-                            screen = mouse.screen,
+   popup = naughty.notify({
+         icon = iconpath,
+         icon_size = 16,
+         text = volumetext,
+         timeout = timeout, hover_timeout = 0.5,
+         screen = mouse.screen,
+         ignore_suspend = true
    })
 end
 

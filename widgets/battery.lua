@@ -15,8 +15,8 @@ local beautiful = require("beautiful")
 local brightness = require("widgets/brightness")
 local helpers = require("widgets/helpers")
 
+local config = awful.util.getdir("config")
 local widget = {}
-
 local popup = nil
 local batterytext = "--"
 local iconpath = ""
@@ -26,15 +26,6 @@ local adapter = "BAT1"
 local acAdapter = "ACAD"
 local charge = "charge"
 
--- Test identifier
-widget.hasbattery = helpers:test("cat /sys/class/power_supply/" .. adapter .. "/" .. charge .. "_now")
-
--- Try another identifier
-if not widget.hasbattery then
-   charge = "energy"
-   widget.hasbattery = helpers:test("cat /sys/class/power_supply/" .. adapter .. "/" .. charge .. "_now")
-end
--- }}}
 
 -- {{{ Define subwidgets
 widget.text = wibox.widget.textbox()
@@ -44,31 +35,41 @@ widget._icon = wibox.widget.imagebox()
 -- helpers:set_draw_method(widget._icon)
 -- }}}
 
--- {{{ Define interactive behaviour
+-- {{{ Define interactive behavior
 widget._icon:buttons(awful.util.table.join(
                         awful.button({ }, 1, function () awful.util.spawn("gnome-control-center power") end)
 ))
 -- }}}
 
+-- {{{ Check adapter method
+function widget:check()
+   -- Test identifier
+   charge = "charge"
+   widget.hasbattery = helpers:test("cat /sys/class/power_supply/" .. adapter .. "/" .. charge .. "_now")
+
+   -- Try another identifier
+   if not widget.hasbattery then
+      charge = "energy"
+      widget.hasbattery = helpers:test("cat /sys/class/power_supply/" .. adapter .. "/" .. charge .. "_now")
+   end
+end
+-- }}}
+
 -- {{{ Update method
 function widget:update()
    local sendNotify = false
-   local fcur = io.popen("cat /sys/class/power_supply/" ..adapter .. "/" .. charge .. "_now")
-   local fcap = io.popen("cat /sys/class/power_supply/" ..adapter .. "/" .. charge .. "_full")
-   local fsta = io.popen("cat /sys/class/power_supply/" ..adapter .. "/status")
-   local fac = io.popen("cat /sys/class/power_supply/" ..acAdapter .. "/online")
-   local cur = fcur:read()
-   local cap = fcap:read()
-   local sta = fsta:read()
-   local ac  = fac:read()
-
+   local cur = helpers:run("cat /sys/class/power_supply/" ..adapter .. "/" .. charge .. "_now")
+   local cap = helpers:run("cat /sys/class/power_supply/" ..adapter .. "/" .. charge .. "_full")
+   local sta = helpers:run("cat /sys/class/power_supply/" ..adapter .. "/status")
+   local ac = helpers:run("cat /sys/class/power_supply/" ..acAdapter .. "/online")
+   
    if cur and cap then
       local acStatus = math.floor(ac)
       local battery = math.floor(cur * 100 / cap)
       local colorfg = beautiful.fg_urgent
       local toHibernate = false
       batterytext = battery .. "% Battery"
-      iconpath = "/usr/share/icons/gnome/scalable/status/battery"
+      iconpath = config.."/theme/icons/status/battery"
 
       if(battery < 5) then
          iconpath = iconpath .. "-caution"
@@ -114,30 +115,31 @@ function widget:update()
       end
 
       if (sendNotify) then
-         naughty.notify({ icon = iconpath,
-                          icon_size = 30,
-                          text = batterytext,
-                          timeout = 4, hover_timeout = 0.5,
-                          screen = mouse.screen,
-                          fg = colorfg})
+         naughty.notify({
+               icon = iconpath,
+               icon_size = 30,
+               text = batterytext,
+               timeout = 4, hover_timeout = 0.5,
+               screen = mouse.screen,
+               fg = colorfg,
+               ignore_suspend = true
+         })
       end
 
    else
       widget.text:set_markup("N/A")
 
    end
-
-   fcur:close()
-   fcap:close()
-   fsta:close()
 end
 
 function widget:show()
-   popup = naughty.notify({ icon = iconpath,
-                            icon_size = 16,
-                            text = batterytext,
-                            timeout = 0, hover_timeout = 0.5,
-                            screen = mouse.screen,
+   popup = naughty.notify({
+         icon = iconpath,
+         icon_size = 16,
+         text = batterytext,
+         timeout = 0, hover_timeout = 0.5,
+         screen = mouse.screen,
+         ignore_suspend = true
    })
 end
 
@@ -149,13 +151,15 @@ function widget:hide()
 end
 -- }}}
 
--- {{{ Listen if signal was found
+-- {{{ Listen if battery was found
+widget:check()
+
 if widget.hasbattery then
    helpers:listen(widget)
-end
 
-widget._icon:connect_signal("mouse::enter", function() widget:show() end)
-widget._icon:connect_signal("mouse::leave", function() widget:hide() end)
+   widget._icon:connect_signal("mouse::enter", function() widget:show() end)
+   widget._icon:connect_signal("mouse::leave", function() widget:hide() end)
+end
 -- }}}
 
 return widget
