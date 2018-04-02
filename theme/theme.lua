@@ -43,7 +43,7 @@ end
 theme                                         = {}
 theme.theme_path                              = theme_path
 theme.wallpaper                               = theme_wallpaper
-theme.icon_theme                              = "Moka"
+theme.icon_theme                              = "Papirus-Adapta-Nokto"
 
 theme.font                                    = "Hack 8"
 
