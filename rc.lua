@@ -18,17 +18,15 @@ local naughty = require("naughty")
 local menubar = require("menubar")
 -- Aditional libraries
 local cyclefocus = require("libs/cyclefocus")
-
-require("awful.autofocus")
-awful.rules = require("awful.rules")
-
---
 -- Custom widgets
 local myvolume = require("widgets/volume")
 local mybrightness = require("widgets/brightness")
 local mybattery = require("widgets/battery")
 local mywifi = require("widgets/wifi")
 local mycpufreq = require("widgets/cpufreq")
+
+require("awful.autofocus")
+awful.rules = require("awful.rules")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -56,31 +54,15 @@ do
 end
 -- }}}
 
--- Cyclefocus
-cyclefocus.raise_clients = false
-cyclefocus.focus_clients = false
-cyclefocus.display_prev_count = 1
-cyclefocus.naughty_preset = {
-   position = "top_left",
-   timeout = 0,
-   margin = 3,
-   border_width = 1,
-   border_color = "#001E21",
-   fg = "#00ffff",
-   bg = "#001214"
-}
-naughty.config.defaults.fg = "#6F6F6F"
-naughty.config.defaults.bg = "#ffffff"
-naughty.config.defaults.width = 300
-naughty.config.defaults.icon_size = 30
-
 -- {{{ Variable definitions
+sloppy_focus = false
 wallmenu = {}
 
 --Configure home path so you dont have too
 home_path  = os.getenv("HOME") .. "/"
+config_path = home_path .. ".config/awesome/"
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init(home_path .. "/.config/awesome/theme/theme.lua")
+beautiful.init(config_path .. "theme/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "urxvtc" or "urxvt" or "terminator" or "gnome-terminal" or "xterm"
@@ -104,7 +86,7 @@ altkey = "Mod1"
 
 
 -- {{{ Helper functions
-local function client_menu_toggle_fn()
+local function client_menu_toggle ()
    local instance = nil
 
    return function ()
@@ -117,19 +99,24 @@ local function client_menu_toggle_fn()
    end
 end
 
-local system_lock = function ()
-   awful.spawn("xdg-screensaver lock")
-   --[[
-   dbus-send --session --dest=org.freedesktop.ScreenSaver --type=method_call
-   --print-reply --reply-timeout=20000 /ScreenSaver org.freedesktop.ScreenSaver.Lock
-   --]]
+
+local function notify_callback (args)
+   if args.freedesktop_hints ~= nil and args.freedesktop_hints.urgency == "\2" then
+      args.ignore_suspend = true
+   end
+
+   return args
 end
 
-local system_suspend = function ()
+local function system_lock ()
+   awful.spawn("loginctl lock-session")
+end
+
+local function system_suspend ()
    awful.spawn("systemctl suspend")
 end
 
-local system_hibernate = function ()
+local function system_hibernate ()
    awful.prompt.run {
       prompt       = "Hibernate (type 'yes' to confirm)? ",
       textbox      = awful.screen.focused().mypromptbox.widget,
@@ -144,7 +131,7 @@ local system_hibernate = function ()
    }
 end
 
-local system_hybrid_sleep = function ()
+local function system_hybrid_sleep ()
    awful.prompt.run {
       prompt       = "Hybrid Sleep (type 'yes' to confirm)? ",
       textbox      = awful.screen.focused().mypromptbox.widget,
@@ -159,7 +146,7 @@ local system_hybrid_sleep = function ()
    }
 end
 
-local system_reboot = function ()
+local function system_reboot ()
    awful.prompt.run {
       prompt       = "Reboot (type 'yes' to confirm)? ",
       textbox      = awful.screen.focused().mypromptbox.widget,
@@ -175,7 +162,7 @@ local system_reboot = function ()
    }
 end
 
-local system_power_off = function ()
+local function system_power_off ()
    awful.prompt.run {
       prompt       = "Power Off (type 'yes' to confirm)? ",
       textbox      = awful.screen.focused().mypromptbox.widget,
@@ -191,12 +178,24 @@ local system_power_off = function ()
    }
 end
 
-local wall_load = function(wall)
-   local f = io.popen("ln -sfn " .. home_path .. "Pictures/Wallpapers/" .. wall .. " " .. home_path .. ".config/awesome/theme/_wall.jpg")
+local function take_screenshot (opts)
+   if opts == nil then
+      opts = ""
+   end
+   local sound = "/usr/share/sounds/freedesktop/stereo/screen-capture.oga"
+
+   awful.spawn.easy_async_with_shell("maim ~/Pictures/screenshot-$(date +%Y-%m-%d_%H-%M-%S).png " .. opts,
+                                     function ()
+                                        awful.spawn.with_shell("paplay " .. sound)
+   end)
+end
+
+local function wall_load (wall)
+   local f = io.popen("ln -sfn " .. home_path .. "Pictures/Wallpapers/" .. wall .. " " .. config_path .. "theme/_wall.jpg")
    awesome.restart()
 end
 
-local wall_menu = function()
+local function wall_menu ()
    local f = io.popen("ls -1 " .. home_path .. "Pictures/Wallpapers/")
    for l in f:lines() do
       local item = { l, function () wall_load(l) end }
@@ -205,7 +204,7 @@ local wall_menu = function()
    table.insert(wallmenu, {
                    "Default",
                    function ()
-                      awful.spawn.with_shell("rm " .. home_path .. ".config/awesome/theme/_wall.jpg")
+                      awful.spawn.with_shell("rm " .. config_path .. "theme/_wall.jpg")
                       awesome.restart() end})
    f:close()
 end
@@ -221,7 +220,27 @@ local function set_wallpaper(s)
       gears.wallpaper.maximized(wallpaper, s, true)
    end
 end
+--}}}
 
+-- {{{ Configuration
+naughty.config.defaults.fg = "#6F6F6F"
+naughty.config.defaults.bg = "#ffffff"
+naughty.config.defaults.width = 300
+naughty.config.defaults.icon_size = 30
+naughty.config.notify_callback = notify_callback
+-- Cyclefocus
+cyclefocus.show_clients = false
+cyclefocus.focus_clients = false
+cyclefocus.display_prev_count = 1
+cyclefocus.default_preset = {
+   position = "top_left", -- deprecated options
+   timeout = 0,
+   margin = 3,
+   border_width = 1,
+   border_color = "#001E21",
+   fg = "#00ffff",
+   bg = "#001214"
+}
 --}}}
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
@@ -329,14 +348,13 @@ local tasklist_buttons = awful.util.table.join(
             c:raise()
          end
    end),
-   awful.button({ }, 3, client_menu_toggle_fn()),
+   awful.button({ }, 3, client_menu_toggle()),
    awful.button({ }, 4, function ()
          awful.client.focus.byidx(1)
    end),
    awful.button({ }, 5, function ()
          awful.client.focus.byidx(-1)
 end))
-
 
 awful.screen.connect_for_each_screen(function(s)
       -- Widgets separators
@@ -389,34 +407,38 @@ awful.screen.connect_for_each_screen(function(s)
 
       -- Widgets that are aligned to the left
       local left_layout = wibox.layout.fixed.horizontal()
-      left_layout:add(mylauncher)
+      if s.index == 1 then
+         left_layout:add(mylauncher)
+      end
       left_layout:add(s.mytaglist)
       left_layout:add(s.mypromptbox)
       left_layout:add(separator10px)
 
       -- Widgets that are aligned to the right
       local right_layout = wibox.layout.fixed.horizontal()
-      right_layout:add(mysystraymargin)
-      right_layout:add(separator2px)
-      right_layout:add(mykeyboardlayout)
-      right_layout:add(separator2px)
-      right_layout:add(mycpufreq.text)
-      right_layout:add(separator2px)
-      right_layout:add(myvolume.icon)
-      right_layout:add(separator1px)
-      right_layout:add(mybrightness.icon)
-
-      if mybattery.hasbattery then
+      if s.index == 1 then
+         right_layout:add(mysystraymargin)
+         right_layout:add(separator2px)
+         right_layout:add(mykeyboardlayout)
+         right_layout:add(separator2px)
+         right_layout:add(mycpufreq.text)
+         right_layout:add(separator2px)
+         right_layout:add(myvolume.icon)
          right_layout:add(separator1px)
-         right_layout:add(mybattery.icon)
-      end
+         right_layout:add(mybrightness.icon)
 
-      if mywifi.haswifi then
-         right_layout:add(separator1px)
-         right_layout:add(mywifi.icon)
-      end
+         if mybattery.hasbattery then
+            right_layout:add(separator1px)
+            right_layout:add(mybattery.icon)
+         end
 
-      right_layout:add(mytextclock)
+         if mywifi.haswifi then
+            right_layout:add(separator1px)
+            right_layout:add(mywifi.icon)
+         end
+
+         right_layout:add(mytextclock)
+      end
       right_layout:add(s.mylayoutbox)
 
       -- Add widgets to the wibox
@@ -454,8 +476,9 @@ globalkeys = awful.util.table.join(
       function () lain.util.tag_view_nonempty(1) end),
 
    -- Take a screenshot
-   awful.key({                   }, "Print",
-      function () awful.spawn("upload_screens scr") end),
+   awful.key({                   }, "Print", take_screenshot),
+   awful.key({ modkey            }, "Print", function () take_screenshot("-s") end),
+   awful.key({ altkey            }, "Print", function () take_screenshot("--delay=10") end),
 
    -- Default client focus
    awful.key({ modkey,           }, "j",
@@ -468,13 +491,12 @@ globalkeys = awful.util.table.join(
          awful.client.focus.byidx(-1)
          if client.focus then client.focus:raise() end
    end),
-   awful.key({ modkey,           }, "w", function () mymainmenu:show() end),
 
    -- Layout manipulation
    -- keydoc.group("Layout manipulation"),
-   awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end),
-   awful.key({ modkey, "Shift"   }, "k", function () awful.client.swap.byidx( -1)    end),
-   awful.key({ modkey, "Control" }, "j", function () awful.screen.focus_relative( 1) end),
+   awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(1)      end),
+   awful.key({ modkey, "Shift"   }, "k", function () awful.client.swap.byidx(-1)     end),
+   awful.key({ modkey, "Control" }, "j", function () awful.screen.focus_relative(1)  end),
    awful.key({ modkey, "Control" }, "k", function () awful.screen.focus_relative(-1) end),
    awful.key({ modkey,           }, "u", awful.client.urgent.jumpto),
    awful.key({ modkey,           }, "Tab",
@@ -515,6 +537,21 @@ globalkeys = awful.util.table.join(
    -- System brightness
    awful.key({                   }, "XF86MonBrightnessDown", function() mybrightness:down() end),
    awful.key({                   }, "XF86MonBrightnessUp", function() mybrightness:up() end),
+
+   -- Toggle sloppy focus
+   awful.key({ modkey, "Shift"   }, "s", function ()
+         sloppy_focus = not sloppy_focus
+   end),
+
+   -- Notifications
+   awful.key({ modkey, "Shift"   }, "d", function ()
+         -- TODO: move to external widget with icon
+         if naughty.is_suspended() then
+            naughty.resume()
+         else
+            naughty.suspend()
+         end
+   end),
 
    -- Admin
    awful.key({ modkey,           }, "Home", system_lock),
@@ -703,6 +740,10 @@ function titlebar_add(c)
    end
 end
 
+function awful.rules.extra_properties.icon(c, value, props)
+   awful.spawn.with_shell("xseticon -id " .. c.window .. " " .. value)
+end
+
 -- {{{ Rules
 -- Rules to apply to new clients (through the "manage" signal).
 awful.rules.rules = {
@@ -717,7 +758,7 @@ awful.rules.rules = {
         buttons = clientbuttons,
         screen = awful.screen.preferred,
         titlebars_enabled = false,
-        placement = awful.placement.no_overlap+awful.placement.no_offscreen 
+        placement = awful.placement.no_overlap+awful.placement.no_offscreen
      }
    },
    -- Floating clients.
@@ -761,11 +802,11 @@ awful.rules.rules = {
    { rule = { instance = "owncloud" },
      properties = { floating = true } },
    { rule_any = { class = {"URxvt", ".*ermina.*"} },
-     properties = { tag = "2", size_hints_honor = false } },
+     properties = { tag = "2", size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/terminal.png" } },
    { rule = { class = "Emacs" },
      properties = { tag = "3", switchtotag = true, size_hints_honor = false } },
    { rule = { instance = "Ranger" },
-     properties = { tag = "6", switchtotag = true, size_hints_honor = false } },
+     properties = { tag = "6", switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" } },
    { rule_any = { role = {"browser"}, class = { "Epiphany" }},
      properties = { tag = "4" } },
    {rule = {instance = "Pidgin"},
@@ -868,7 +909,7 @@ end)
 -- Enable sloppy focus, so that focus follows mouse.
 client.connect_signal(
    "mouse::enter", function(c)
-      if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
+      if sloppy_focus and awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
       and awful.client.focus.filter(c) then
          client.focus = c
       end
@@ -879,15 +920,5 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- }}}
 
 -- {{{ Autorun apps
--- awful.spawn.with_shell("pgrep udiskie || udiskie --smart-tray --notify", false)
--- awful.spawn.with_shell("pgrep kupfer || kupfer --no-splash", false)
--- awful.spawn.with_shell("xrandr --setprovideroffloadsink nouveau Intel", false)
--- awful.spawn.with_shell("pgrep owncloud || owncloud", false)
--- awful.spawn.with_shell("pgrep clipit || clipit", false)
--- awful.spawn.with_shell("pgrep emacs || emacs --daemon --no-splash", false)
--- awful.spawn.with_shell("pgrep urxvtd || urxvtd -q -o", false)
--- awful.spawn.with_shell("light-locker", false)
--- awful.spawn.with_shell("pgrep xss-lock || xss-lock -- light-locker-command --lock &", false)
--- awful.spawn.with_shell("pgrep redshift || redshift", false)
--- awful.spawn.with_shell("pgrep xautolock || xautolock -detectsleep -notify 300 -notifier 'xset dpms force off' -time 10 -locker 'light-locker-command -l' -killtime 30 -killer 'systemctl suspend'", false)
+awful.spawn.with_shell(config_path .. "autorun.sh", false)
 -- }}}
