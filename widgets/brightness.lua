@@ -14,28 +14,44 @@ local helpers = require("widgets/helpers")
 math = require("math")
 string = require("string")
 
+local config = awful.util.getdir("config")
 local widget = { mt = {}, wmt = {} }
+
 widget.wmt.__index = widget
 widget.__index = widget
 
-config = awful.util.getdir("config")
-
-local function run(command)
-   local prog = io.popen(command)
-   local result = prog:read('*all')
-   prog:close()
-   return result
-end
-
+-- {{{ Create brightness widget method
 function widget:new(args)
    local obj = setmetatable({}, self)
+   local defaultBlPath = "/sys/class/backlight/acpi_video0"
+   local intelBlPath = "/sys/class/backlight/intel_backlight"
 
-   obj.step = args.step or 5
    obj.cmd = args.cmd or "xbacklight"
-   obj.incVal = args.inc or "-inc"
-   obj.decVal = args.dec or "-dec"
-   obj.setVal = args.set or "-set"
-   obj.getVal = args.get or "-get"
+   obj.backlightPath = args.backlight_path or defaultBlPath
+
+   if helpers:test(obj.cmd) then
+      obj.step = args.step or 5
+      obj.incVal = args.inc or "-inc"
+      obj.decVal = args.dec or "-dec"
+      obj.setVal = args.set or "-set"
+      obj.getVal = args.get or "-get"
+      
+   elseif helpers:exists(obj.backlightPath) then
+      obj.max = helpers:run("cat "..obj.backlightPath.."/max_brightness")
+      obj.step = (obj.max / 100) * 3;
+      obj.cmd = nil
+      
+   elseif helpers:exists(intelBlPath) then
+      obj.backlightPath = intelBlPath
+      obj.max = helpers:run("cat "..obj.backlightPath.."/max_brightness")
+      obj.step = (obj.max / 100) * 3;
+      obj.cmd = nil
+      
+   else
+      obj.cmd = nil
+      obj.backlightPath = nil
+      
+   end
 
    -- Create imagebox widget
    obj._icon = wibox.widget.imagebox()
@@ -63,11 +79,15 @@ function widget:new(args)
 end
 
 function widget:tooltipText()
-   return math.floor(self:get()).."% Brightness"
+   return self:get().."% Brightness"
 end
 
-function widget:update(status)
-   local brightness = math.floor(self:get())
+function widget:percentage(value)
+   return math.floor((100 * value) / self.max)
+end
+
+function widget:update()
+   local brightness = self:get()
    local iconpath = config.."/theme/icons/status/brightness"
 
    if(brightness < 5) then
@@ -102,43 +122,65 @@ function widget:update(status)
    self.brightness = brightness
 end
 
-function widget:updateDelay()
-   local timer = timer({timeout = time or 0})
-
-   timer:connect_signal("timeout", function()
-                           self:update({})
-                           timer:stop()
-   end)
-   timer:start()
-end
-
 function widget:up()
-   run(self.cmd.." "..self.incVal.." "..self.step)
-   self:updateDelay(0.1)
+   if self.cmd ~= nil then 
+      helpers:run(self.cmd.." "..self.incVal.." "..self.step)
+   elseif self.backlightPath ~= nil then
+      local val = math.floor(helpers:run("cat "..self.backlightPath.."/brightness") + self.step)
+
+      if val > math.floor(self.max) or self.brightness > 95 or self:percentage(val) >= 97 then
+         val = self.max
+      end
+      helpers:run("tee "..self.backlightPath.."/brightness <<< "..val)
+   end
+   helpers:delay(function() self:update() end, 0.1)
 end
 
 function widget:down()
-   run(self.cmd.." "..self.decVal.." "..self.step)
-   self:updateDelay(0.1)
+   if self.cmd ~= nil then 
+      helpers:run(self.cmd.." "..self.decVal.." "..self.step)
+   elseif self.backlightPath ~= nil then
+      local val = math.floor(helpers:run("cat "..self.backlightPath.."/brightness") - self.step)
+
+      if self:percentage(val) <= 5 then
+         val = 0
+      end
+      helpers:run("tee "..self.backlightPath.."/brightness <<< "..val)
+   end
+   helpers:delay(function() self:update() end, 0.1)
 end
 
 function widget:get()
-   return run(self.cmd.." "..self.getVal)
+   if self.cmd ~= nil then 
+      return math.floor(helpers:run(self.cmd.." "..self.getVal) or 0)
+   elseif self.backlightPath ~= nil then
+      local value = helpers:run("cat "..self.backlightPath.."/brightness")
+      return self:percentage(value)
+   else
+      return 100
+   end
 end
 
 function widget:set(val)
-   run(self.cmd.." "..self.setVal.." "..val)
+   if self.cmd ~= nil then 
+      helpers:run(self.cmd.." "..self.setVal.." "..val)
+   elseif self.backlightPath ~= nil then
+      val = (self.max / 100) * val;
+      helpers:run("tee "..self.backlightPath.."/brightness <<< "..val)
+   end
 end
 
 function widget:popupShow(timeout)
    local icon = self.iconpath
    local tooltipText = self:tooltipText()
    self:popupHide()
-   self.popup = naughty.notify({ icon = icon,
-                                 icon_size = 16,
-                                 text =  tooltipText,
-                                 timeout = timeout, hover_timeout = 0.5,
-                                 screen = mouse.screen,
+   self.popup = naughty.notify({
+         icon = icon,
+         icon_size = 16,
+         text =  tooltipText,
+         timeout = timeout, hover_timeout = 0.5,
+         screen = mouse.screen,
+         ignore_suspend = true
    })
 end
 
