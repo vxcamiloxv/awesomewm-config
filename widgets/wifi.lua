@@ -13,63 +13,92 @@ local awful = require("awful")
 local naughty = require("naughty")
 local helpers = require("widgets/helpers")
 
+local config = awful.util.getdir("config")
 local widget = {}
-
 local popup = nil
+local adapter = ""
 local iconpath = ""
-local qualitytext = "--"
+local networktext = "--"
 
--- {{{ Define the adapter
-local adapter = "wlan0"
 
--- Test adapter
-widget.haswifi = helpers:test("iwconfig " .. adapter)
-
--- Try another adapter name
-if not widget.haswifi then
-   adapter = "wlp8s0"
-   widget.haswifi = helpers:test("ifconfig " .. adapter)
-end
--- }}}
-
--- {{{ Define subwidgets
+-- {{{ Define sub-widgets
 widget.text = wibox.widget.textbox()
 widget._icon = wibox.widget.imagebox()
 
--- Change the draw method so icons can be drawn smaller
--- helpers:set_draw_method(widget._icon)
--- }}}
-
--- {{{ Define interactive behaviour
+-- {{{ Define interactive behavior
 widget._icon:buttons(awful.util.table.join(
                         awful.button({ }, 1, function () awful.util.spawn("gnome-control-center network") end)
 ))
 -- }}}
 
+-- {{{ Check adapter method
+function widget:check()
+   -- Test adapter
+   adapter = "wlan0"
+   self.haswifi = helpers:test("iwconfig " .. adapter)
+
+   -- Try another adapter name
+   if not self.haswifi then
+      adapter = "wlp8s0"
+      self.haswifi = helpers:test("iwconfig " .. adapter)
+   end
+end
+-- }}}
+
 -- {{{ Update method
 function widget:update()
-    spacer = " "
+   local quality = 0
+   local connected = ""
+   local rate = ""
+   spacer = " "
 
-    local f = io.popen("sudo iwconfig " .. adapter)
-    local wifi = f:read("*all")
-    local connected = string.match(wifi, "ESSID:\"(.*)\"")
-    local wifiMin, wifiMax = string.match(wifi, "(%d?%d)/(%d?%d)")
+   if not self.haswifi then
+      -- Check adapter
+      self:check()
+   end
 
-    wifiMin = tonumber(wifiMin) or 0
-    wifiMax = tonumber(wifiMax) or 70
+   -- definitely has not
+   if not self.haswifi then
+      return
+   end
 
-    local quality = math.floor(wifiMin / wifiMax * 100)
-    qualitytext = quality .. "%"
+   if not helpers:test("nmcli") then
+      local wifi = helpers:run("iwconfig " .. adapter)
+      local wifiMin, wifiMax = string.match(wifi, "(%d?%d)/(%d?%d)")
 
-    if connected then
-       qualitytext = qualitytext .. " (" .. connected .. ")"
-    end
+      connected = string.match(wifi, "ESSID:\"(.*)\"")
+      wifiMin = tonumber(wifiMin) or 0
+      wifiMax = tonumber(wifiMax) or 70
+      quality = math.floor(wifiMin / wifiMax * 100) 
+   else
+      local wifi = helpers:run("nmcli -t device wifi") 
+      local data = string.match(wifi, "*:(.*)")
+      local values = {}
+      local i = 0;
+      
+      for val in string.gmatch(data, "([^:]+)") do
+         values[i] = val
+         i = i + 1
+      end
+      
+      connected = values[0]
+      quality = math.floor(values[4] or 0)
+      rate = " | " .. values[3] .. " | " .. values[5]
+   end
+   
+   networktext = quality .. "%"
 
-    widget.text:set_markup(qualitytext)
+   if quality <= 0 then
+      networktext = " no connected"
+   elseif connected then
+      networktext = networktext .. " | " .. connected .. rate
+   end
 
-    iconpath = "/usr/share/icons/gnome/scalable/status/network-wireless-signal"
+   self.text:set_markup(networktext)
 
-    if quality <= 0 then
+   iconpath = config.."/theme/icons/status/network-wireless-signal"
+
+   if quality <= 0 then
        iconpath = iconpath .. "-none"
 
     elseif quality < 25 then
@@ -88,18 +117,17 @@ function widget:update()
 
     iconpath = iconpath .. "-symbolic.svg"
 
-    widget._icon:set_image(iconpath)
-    widget.icon = helpers:set_draw_method(widget._icon)
-
-    f:close()
+    self._icon:set_image(iconpath)
+    self.icon = helpers:set_draw_method(self._icon)
 end
 
 function widget:show()
    popup = naughty.notify({ icon = iconpath,
                             icon_size = 16,
-                            text = qualitytext,
+                            text = networktext,
                             timeout = 0, hover_timeout = 0.5,
                             screen = mouse.screen,
+                            ignore_suspend = true
    })
 end
 
@@ -112,9 +140,7 @@ end
 -- }}}
 
 -- {{{ Listen if signal was found
-if widget.haswifi then
-   helpers:listen(widget, 30)
-end
+helpers:listen(widget, 30)
 
 widget._icon:connect_signal("mouse::enter", function() widget:show() end)
 widget._icon:connect_signal("mouse::leave", function() widget:hide() end)
