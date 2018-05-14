@@ -13,7 +13,8 @@ xinput --set-prop 14 "libinput Click Method Enabled" {1 1}
 xinput --set-prop 14 "libinput Tapping Enabled" 1
 
 # Composition
-run compton -l -4 -t -4 -r 3 -o 0.3 -C -b --no-fading-openclose
+# run compton -l -4 -t -4 -r 3 -o 0.3 -C -b --no-fading-openclose
+run xcompmgr
 
 # Autorun apps
 # --------------
