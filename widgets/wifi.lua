@@ -69,23 +69,25 @@ function widget:update()
       connected = string.match(wifi, "ESSID:\"(.*)\"")
       wifiMin = tonumber(wifiMin) or 0
       wifiMax = tonumber(wifiMax) or 70
-      quality = math.floor(wifiMin / wifiMax * 100) 
+      quality = math.floor(wifiMin / wifiMax * 100)
    else
-      local wifi = helpers:run("nmcli -t device wifi") 
+      local wifi = helpers:run("nmcli -t device wifi")
       local data = string.match(wifi, "*:(.*)")
       local values = {}
       local i = 0;
-      
-      for val in string.gmatch(data, "([^:]+)") do
-         values[i] = val
-         i = i + 1
+
+      if data ~= nil then
+         for val in string.gmatch(data, "([^:]+)") do
+            values[i] = val
+            i = i + 1
+         end
+
+         connected = values[0]
+         quality = math.floor(values[4] or 0)
+         rate = " | " .. values[3] .. " | " .. values[5]
       end
-      
-      connected = values[0]
-      quality = math.floor(values[4] or 0)
-      rate = " | " .. values[3] .. " | " .. values[5]
    end
-   
+
    networktext = quality .. "%"
 
    if quality <= 0 then
