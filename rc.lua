@@ -106,9 +106,9 @@ local function client_resize (key, c)
    if c == nil then
       c = client.focus
    end
-   
-   
-   if c.floating then 
+
+
+   if c.floating then
       if     key == "Up"    then c:relative_move(0, 0, 0, -5)
       elseif key == "Down"  then c:relative_move(0, 0, 0, 5)
       elseif key == "Right" then c:relative_move(0, 0, 5, 0)
@@ -235,6 +235,7 @@ local function take_screenshot (opts)
 end
 
 local function wall_load (wall)
+   -- TODO: replace io.open with a non-blocking
    local f = io.popen("ln -sfn " .. home_path .. "Pictures/Wallpapers/" .. wall .. " " .. config_path .. "theme/_wall.jpg")
    awesome.restart()
 end
@@ -516,7 +517,17 @@ globalkeys = gears.table.join(
    awful.key({ modkey,           }, "Right",  awful.tag.viewnext,
       {description = "view next", group = "tag"}),
    awful.key({ modkey,           }, "Escape", awful.tag.history.restore,
-      {description = "go back", group = "tag"}), 
+      {description = "go back", group = "tag"}),
+
+   -- Non-empty tag browsing
+   awful.key({ modkey,            }, "Next",
+      function ()
+         tag_view_nonempty(1)
+      end, {description = "focus next non-empty tag", group = "tag"}),
+   awful.key({ modkey,            }, "Prior",
+      function ()
+         tag_view_nonempty(-1)
+      end, {description = "focus previous non-empty tag", group = "tag"}),
 
    -- Take a screenshot
    awful.key({                   }, "Print", take_screenshot,
@@ -538,17 +549,7 @@ globalkeys = gears.table.join(
          if client.focus then client.focus:raise() end
       end, {description = "focus previous by index", group = "client"}),
 
-   -- Non-empty tag browsing
-   awful.key({ modkey,            }, "Next",
-      function ()
-         tag_view_nonempty(1)
-      end, {description = "focus next non-empty tag", group = "client"}),
-   awful.key({ modkey,            }, "Prior",
-      function ()
-         tag_view_nonempty(-1)
-      end, {description = "focus previous non-empty tag", group = "client"}),
-   
-   -- Layout manipulation 
+   -- Layout manipulation
    awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(1)      end,
       {description = "swap with next client by index", group = "client"}),
    awful.key({ modkey, "Shift"   }, "k", function () awful.client.swap.byidx(-1)     end,
@@ -748,7 +749,7 @@ clientkeys = gears.table.join(
          c.maximized_horizontal = not c.maximized_horizontal
          c.maximized_vertical   = not c.maximized_vertical
          c:raise()
-      end, {description = "(un)maximize horizontally/vertically", group = "client"}), 
+      end, {description = "(un)maximize horizontally/vertically", group = "client"}),
    awful.key({ modkey, "Shift"   }, "m",
       function (c)
          c.maximized_horizontal = not c.maximized_horizontal
@@ -961,7 +962,7 @@ awful.rules.rules = {
      properties = { floating = true } },
    { rule = { class = "pinentry" },
      properties = { floating = true } },
-   { rule = { class = "Gimp-2.8" },
+   { rule = { class = "Gimp.*" },
      properties = { tag = "6", floating = true } },
    { rule = { instance = "owncloud" },
      properties = { floating = true } },
@@ -969,81 +970,61 @@ awful.rules.rules = {
      properties = { tag = "2", size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/terminal.png" } },
    { rule = { class = "Emacs" },
      properties = { tag = "3", switchtotag = true, size_hints_honor = false } },
-   { rule = { instance = "Ranger" },
+   { rule_any = { instance = { "Ranger" }, name = { ".*mc .*", ".*ranger:.*" } },
      properties = { tag = "6", switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" } },
-   { rule_any = { role = {"browser"}, class = { "Epiphany" }},
+   { rule_any = { role = { "browser" }, class = { "Epiphany" }},
      properties = { tag = "4" } },
-   {rule = {instance = "Pidgin"},
+   { rule = { name = ".*weeChat.*" },
+     properties = {
+        tag = "5", switchtotag = true, size_hints_honor = false, maximized_vertical = true, maximized_horizontal = true, icon = "/usr/share/icons/hicolor/32x32/apps/weechat.png"
+   } },
+   { rule = { name = "^Android Emulator*" }, properties = { floating = true, border_width = 0 } },
+   { rule = { name = "^Emulator" }, properties = { skip_taskbar = true, focusable = false } },
+   {rule = { instance = "Pidgin" },
     properties = { tag = "5", size_hints_honor = false, floating = true }},
-   {rule = {class = "Pidgin", role = "conversation"},
-    properties = {width = 1000, height = 670, x = 320, y = 55}},
+   {rule = { class = "Pidgin", role = "conversation" },
+    properties = { width = 1000, height = 670, x = 320, y = 55 }},
    -- {rule = {class = "Pidgin", role = "accounts"},
    --  properties = {width = 500, height = 500, x = 0, y = 0}},
-   {rule = {class = "Pidgin", role = "buddy_list"},
-    properties = {width = 300, height = 670, x = 10, y = 55},
-    callback   = awful.client.setslave}
+   {rule = { class = "Pidgin", role = "buddy_list" },
+    properties = { width = 300, height = 670, x = 10, y = 55 },
+    callback = awful.client.setslave}
 }
-   -- }}}
+-- }}}
 
-   -- {{{ Signals
-   -- Signal function to execute when a new client appears.
-   client.connect_signal(
-      "manage", function (c)
-         -- Set the windows at the slave,
-         -- i.e. put it at the end of others instead of setting it master.
-         -- if not awesome.startup then awful.client.setslave(c) end
+-- {{{ Signals
+-- Signal function to execute when a new client appears.
+client.connect_signal(
+   "manage", function (c)
+      -- Set the windows at the slave,
+      -- i.e. put it at the end of others instead of setting it master.
+      -- if not awesome.startup then awful.client.setslave(c) end
 
-         if awesome.startup and
-            not c.size_hints.user_position
-         and not c.size_hints.program_position then
-            -- Prevent clients from being unreachable after screen count changes.
-            awful.placement.no_offscreen(c)
-         end
+      if awesome.startup and
+         not c.size_hints.user_position
+      and not c.size_hints.program_position then
+         -- Prevent clients from being unreachable after screen count changes.
+         awful.placement.no_offscreen(c)
+      end
+end)
 
-         -- Awesome 3.x
-         -- -- Enable sloppy focus
-         -- c:connect_signal("mouse::enter", function(c)
-         --                     if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
-         --                     and awful.client.focus.filter(c) then
-         --                        client.focus = c
-         --                     end
-         -- end)
-
-         -- if not startup then
-         --    -- Set the windows at the slave,
-         --    -- i.e. put it at the end of others instead of setting it master.
-         --    -- awful.client.setslave(c)
-
-         --    -- Put windows in a smart way, only if they does not set an initial position.
-         --    if not c.size_hints.user_position and not c.size_hints.program_position then
-         --       awful.placement.no_overlap(c)
-         --       awful.placement.no_offscreen(c)
-         --    end
-         -- end
-
-         -- local titlebars_enabled = false
-         -- if titlebars_enabled then
-         --    titlebar_add(c)
-         -- end
-   end)
-
-   -- Add a titlebar if titlebars_enabled is set to true in the rules.
-   client.connect_signal("request::titlebars", titlebar_add)
+-- Add a titlebar if titlebars_enabled is set to true in the rules.
+client.connect_signal("request::titlebars", titlebar_add)
 
 
-   -- Enable sloppy focus, so that focus follows mouse.
-   client.connect_signal(
-      "mouse::enter", function(c)
-         if sloppy_focus and awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
-         and awful.client.focus.filter(c) then
-            client.focus = c
-         end
-   end)
+-- Enable sloppy focus, so that focus follows mouse.
+client.connect_signal(
+   "mouse::enter", function(c)
+      if sloppy_focus and awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
+      and awful.client.focus.filter(c) then
+         client.focus = c
+      end
+end)
 
-   client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
-   client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
-   -- }}}
+client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
+client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
+-- }}}
 
-   -- {{{ Autorun apps
-   awful.spawn.with_shell(config_path .. "autorun.sh", false)
-   -- }}}
+-- {{{ Autorun apps
+awful.spawn.with_shell(config_path .. "autorun.sh", false)
+-- }}}
