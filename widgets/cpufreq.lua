@@ -28,7 +28,7 @@ if fh ~= nil then
    local i= 1
    for w in string.gmatch(govstr, "%a+") do
       local icon = governor_state[w.."\n"] or ""
-      fraxcpumenu[i] = { icon.."  "..w, "sudo cpufreq-set  --governor "..w}
+      fraxcpumenu[i] = { icon.."  "..w, "sudo cpupower frequency-set -g "..w}
       i= i + 1
    end
 end
