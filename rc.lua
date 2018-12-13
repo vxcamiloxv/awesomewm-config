@@ -978,8 +978,21 @@ awful.rules.rules = {
      properties = {
         tag = "5", switchtotag = true, size_hints_honor = false, maximized_vertical = true, maximized_horizontal = true, icon = "/usr/share/icons/hicolor/32x32/apps/weechat.png"
    } },
-   { rule = { name = "^Android Emulator*" }, properties = { floating = true, border_width = 0 } },
-   { rule = { name = "^Emulator" }, properties = { skip_taskbar = true, focusable = false } },
+   { rule_any = { name = {"^Android Emulator*", "^Emulator"} },
+     properties = {
+        focusable = false, floating = true,
+        -- skip_taskbar = true, 
+        callback = function(c)
+           -- force due the behavior in property::size
+           c.border_width = 0
+           c.no_border = true
+        end
+   } },
+   { rule = { name = "^Emulator", type = "utility"},
+     properties = {
+        skip_taskbar = true
+     }
+   },
    {rule = { instance = "Pidgin" },
     properties = { tag = "5", size_hints_honor = false, floating = true }},
    {rule = { class = "Pidgin", role = "conversation" },
@@ -1023,6 +1036,14 @@ end)
 
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
+-- Fix inconsistent border behaviour when maximizing clients
+client.connect_signal(
+   "property::size", function(c)
+      if c.border_width == 0 and not c.no_border then
+         -- No change when the client
+         c.border_width = beautiful.border_width
+      end
+end)
 -- }}}
 
 -- {{{ Autorun apps

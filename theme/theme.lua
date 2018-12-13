@@ -64,11 +64,11 @@ theme.bg_systray                                = theme.bg_normal
 theme.systray_icon_spacing                      = dpi(5)
 
 -- | Borders | --
-theme.useless_gap                               = dpi(0)
-theme.border_width                              = dpi(1)
-theme.border_normal                             = "#000000"
-theme.border_focus                              = "#005050"
-theme.border_marked                             = "#91231c"
+theme.useless_gap                               = dpi(5)
+theme.border_width                              = dpi(2)
+theme.border_normal                             = "#001214"
+theme.border_focus                              = "#00FFFF"
+theme.border_marked                             = "#FFFFFF"
 
 -- | Menu | --
 theme.menu_icon                                 = theme.theme_path .. "/icons/menu.png"
