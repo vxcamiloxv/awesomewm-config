@@ -973,14 +973,14 @@ awful.rules.rules = {
    { rule_any = { instance = { "Ranger" }, name = { ".*mc .*", ".*ranger:.*" } },
      properties = { tag = "6", switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" } },
    { rule_any = { role = { "browser" }, class = { "Epiphany" }},
-     properties = { tag = "4" } },
+     properties = { tag = "4", maximized = true } },
    { rule = { name = ".*weeChat.*" },
      properties = {
-        tag = "5", switchtotag = true, size_hints_honor = false, maximized_vertical = true, maximized_horizontal = true, icon = "/usr/share/icons/hicolor/32x32/apps/weechat.png"
+        tag = "5", switchtotag = true, icon = "/usr/share/icons/hicolor/32x32/apps/weechat.png"
    } },
    { rule_any = { name = {"^Android Emulator*", "^Emulator"} },
      properties = {
-        focusable = false, floating = true,
+        floating = true,
         -- skip_taskbar = true, 
         callback = function(c)
            -- force due the behavior in property::size
@@ -990,7 +990,8 @@ awful.rules.rules = {
    } },
    { rule = { name = "^Emulator", type = "utility"},
      properties = {
-        skip_taskbar = true
+        skip_taskbar = true,
+        focusable = false
      }
    },
    {rule = { instance = "Pidgin" },
