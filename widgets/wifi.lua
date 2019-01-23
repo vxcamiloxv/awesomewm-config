@@ -82,9 +82,11 @@ function widget:update()
             i = i + 1
          end
 
-         connected = values[0]
-         quality = math.floor(values[4] or 0)
-         rate = " | " .. values[3] .. " | " .. values[5]
+         if tonumber(values[4]) ~= nil then
+            connected = values[0]
+            quality = math.floor(values[4] or 0)
+            rate = " | " .. values[3] .. " | " .. values[5]
+         end
       end
    end
 
