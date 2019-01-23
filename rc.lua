@@ -446,9 +446,7 @@ awful.screen.connect_for_each_screen(function(s)
 
       -- Create a systray widget
       local mysystray = wibox.widget.systray()
-      local mysystraymargin = wibox.layout.margin()
-      mysystraymargin:set_margins(4)
-      mysystraymargin:set_widget(mysystray)
+      local mysystraymargin = wibox.container.margin(mysystray, 0, 0, 2, 2)
 
       -- Create the wibox
       s.mywibox = awful.wibox({ position = "top", screen = s })
