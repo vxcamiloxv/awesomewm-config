@@ -59,6 +59,7 @@ end
 
 -- {{{ Variable definitions
 sloppy_focus = false
+notify_suspended = false
 wallmenu = {}
 
 --Configure home path so you dont have too
@@ -102,8 +103,17 @@ local function client_menu_toggle ()
    end
 end
 
+local function client_set_border(c)
+   -- Fix inconsistent border behaviour when maximizing/fullscreen clients
+   if c.fullscreen then
+      c.border_width = 0
+   elseif c.border_width == 0 and not c.no_border then
+      c.border_width = beautiful.border_width
+   end
+end
+
 local function client_resize (key, c)
-   if c == nil then
+      if c == nil then
       c = client.focus
    end
 
@@ -147,6 +157,17 @@ end
 local function notify_callback (args)
    if args.freedesktop_hints ~= nil and args.freedesktop_hints.urgency == "\2" then
       args.ignore_suspend = true
+   end
+
+   for _, c in pairs(awful.screen.object.get_clients()) do
+      if c.fullscreen and not naughty.is_suspended() then
+         naughty.suspend()
+         return args
+      end
+   end
+
+   if naughty.is_suspended() and not notify_suspended then
+      naughty.resume()
    end
 
    return args
@@ -267,12 +288,9 @@ local function set_wallpaper(s)
 end
 --}}}
 
--- {{{ Configuration
-naughty.config.defaults.fg = "#6F6F6F"
-naughty.config.defaults.bg = "#ffffff"
-naughty.config.defaults.width = 300
-naughty.config.defaults.icon_size = 30
+-- Notification
 naughty.config.notify_callback = notify_callback
+
 -- Cyclefocus
 cyclefocus.show_clients = false
 cyclefocus.focus_clients = false
@@ -356,7 +374,9 @@ mykeyboardlayout = awful.widget.keyboardlayout()
 
 -- {{{ Wibar
 -- Create a textclock widget
-mytextclock = wibox.widget.textclock()
+local mytextclock = wibox.widget.textclock()
+local calendar = awful.widget.calendar_popup.month()
+calendar:attach(mytextclock, "tr")
 
 -- Create a wibox for each screen and add it
 local taglist_buttons = awful.util.table.join(
@@ -645,8 +665,10 @@ globalkeys = gears.table.join(
       function ()
          -- TODO: move to external widget with icon
          if naughty.is_suspended() then
+            notify_suspended = false
             naughty.resume()
          else
+            notify_suspended = true
             naughty.suspend()
          end
       end, {description = "enabled/disable notifications", group = "client"}),
@@ -957,25 +979,34 @@ awful.rules.rules = {
    },
    -- Custom
    { rule = { class = "MPlayer" },
-     properties = { floating = true } },
+     properties = { floating = true }
+   },
    { rule = { class = "pinentry" },
-     properties = { floating = true } },
+     properties = { floating = true }
+   },
    { rule = { class = "Gimp.*" },
-     properties = { tag = "6", floating = true } },
+     properties = { tag = "6", floating = true }
+   },
    { rule = { instance = "owncloud" },
-     properties = { floating = true } },
+     properties = { floating = true }
+   },
    { rule_any = { class = {"URxvt", ".*ermina.*"} },
-     properties = { tag = "2", size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/terminal.png" } },
+     properties = { tag = "2", size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/terminal.png" }
+   },
    { rule = { class = "Emacs" },
-     properties = { tag = "3", switchtotag = true, size_hints_honor = false } },
+     properties = { tag = "3", switchtotag = true, size_hints_honor = false }
+   },
    { rule_any = { instance = { "Ranger" }, name = { ".*mc .*", ".*ranger:.*" } },
-     properties = { tag = "6", switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" } },
+     properties = { tag = "6", switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
+   },
    { rule_any = { role = { "browser" }, class = { "Epiphany" }},
-     properties = { tag = "4", maximized = true } },
+     properties = { tag = "4", maximized = true }
+   },
    { rule = { name = ".*weeChat.*" },
      properties = {
         tag = "5", switchtotag = true, icon = "/usr/share/icons/hicolor/32x32/apps/weechat.png"
-   } },
+     }
+   },
    { rule_any = { name = {"^Android Emulator*", "^Emulator"} },
      properties = {
         floating = true,
@@ -985,22 +1016,28 @@ awful.rules.rules = {
            c.border_width = 0
            c.no_border = true
         end
-   } },
+     }
+   },
    { rule = { name = "^Emulator", type = "utility"},
      properties = {
         skip_taskbar = true,
         focusable = false
      }
    },
-   {rule = { instance = "Pidgin" },
-    properties = { tag = "5", size_hints_honor = false, floating = true }},
-   {rule = { class = "Pidgin", role = "conversation" },
-    properties = { width = 1000, height = 670, x = 320, y = 55 }},
+   { rule = { instance = "Pidgin" },
+     properties = { tag = "5", size_hints_honor = false, floating = true }
+   },
+   { rule = { class = "Pidgin", role = "conversation" },
+     properties = { width = 1000, height = 670, x = 320, y = 55 }},
    -- {rule = {class = "Pidgin", role = "accounts"},
    --  properties = {width = 500, height = 500, x = 0, y = 0}},
-   {rule = { class = "Pidgin", role = "buddy_list" },
-    properties = { width = 300, height = 670, x = 10, y = 55 },
-    callback = awful.client.setslave}
+   { rule = { class = "Pidgin", role = "buddy_list" },
+     properties = { width = 300, height = 670, x = 10, y = 55 },
+     callback = awful.client.setslave
+   },
+   { rule = { class = "Kodi" },
+     properties = { tag = "1", screen = 2, fullscreen = true, ontop = true, switchtotag = true }
+   }
 }
 -- }}}
 
@@ -1035,14 +1072,8 @@ end)
 
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
--- Fix inconsistent border behaviour when maximizing clients
-client.connect_signal(
-   "property::size", function(c)
-      if c.border_width == 0 and not c.no_border then
-         -- No change when the client
-         c.border_width = beautiful.border_width
-      end
-end)
+client.connect_signal("property::size", client_set_border)
+client.connect_signal("property::fullscreen", client_set_border)
 -- }}}
 
 -- {{{ Autorun apps
