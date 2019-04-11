@@ -70,6 +70,15 @@ theme.border_normal                             = "#001214"
 theme.border_focus                              = "#00FFFF"
 theme.border_marked                             = "#FFFFFF"
 
+-- | Notification | --
+theme.notification_fg                           = "#6F6F6F"
+theme.notification_bg                           = "#FFFFFF"
+theme.notification_border_color                 = "#00FFFF"
+theme.notification_border_width                 = 1
+theme.notification_max_height                   = 300
+theme.notification_width                        = 300
+theme.notification_icon_size                    = 30
+
 -- | Menu | --
 theme.menu_icon                                 = theme.theme_path .. "/icons/menu.png"
 theme.menu_submenu_icon                         = theme.theme_path .. "/icons/submenu.png"
