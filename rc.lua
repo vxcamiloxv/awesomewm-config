@@ -155,17 +155,20 @@ local function tag_view_nonempty (direction, sc)
 end
 
 local function notify_callback (args)
+   local should_suspend = false
    if args.freedesktop_hints ~= nil and args.freedesktop_hints.urgency == "\2" then
       args.ignore_suspend = true
    end
 
    for _, c in pairs(awful.screen.object.get_clients()) do
-      if c.fullscreen and not naughty.is_suspended() then
-         naughty.suspend()
-         return args
+      if c.fullscreen then
+         if not naughty.is_suspended() then
+            naughty.suspend()
+         end
+         return
       end
    end
-
+   
    if naughty.is_suspended() and not notify_suspended then
       naughty.resume()
    end
