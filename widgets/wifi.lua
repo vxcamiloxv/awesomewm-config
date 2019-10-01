@@ -14,10 +14,12 @@ local naughty = require("naughty")
 local helpers = require("widgets/helpers")
 
 local config = awful.util.getdir("config")
+local iwconfig = "iwconfig"
 local widget = {}
 local popup = nil
-local adapter = ""
+local adapter = "wlan0"
 local iconpath = ""
+local binpaths = {'/usr/bin/', '/usr/sbin/', '/sbin/', '/bin/'}
 local networktext = "--"
 
 
@@ -33,14 +35,26 @@ widget._icon:buttons(awful.util.table.join(
 
 -- {{{ Check adapter method
 function widget:check()
+   if not helpers:test(iwconfig) then
+      for key, path in pairs(binpaths) do
+         local cmd = path..iwconfig
+         if helpers:test(cmd) then
+            iwconfig = cmd
+            break
+         end
+      end
+   end
    -- Test adapter
-   adapter = "wlan0"
-   self.haswifi = helpers:test("iwconfig " .. adapter)
+   self.haswifi = helpers:test(iwconfig .. " " .. adapter)
 
    -- Try another adapter name
    if not self.haswifi then
-      adapter = "wlp8s0"
-      self.haswifi = helpers:test("iwconfig " .. adapter)
+      local netdata = helpers:run("ip addr")
+      local interface = string.match(netdata, "%d: (w[^:]+)")
+      if interface ~= nil then
+         adapter = interface
+         self.haswifi = helpers:test(iwconfig .. " " .. adapter)
+      end
    end
 end
 -- }}}
@@ -63,7 +77,7 @@ function widget:update()
    end
 
    if not helpers:test("nmcli") then
-      local wifi = helpers:run("iwconfig " .. adapter)
+      local wifi = helpers:run(iwconfig .. " " .. adapter)
       local wifiMin, wifiMax = string.match(wifi, "(%d?%d)/(%d?%d)")
 
       connected = string.match(wifi, "ESSID:\"(.*)\"")

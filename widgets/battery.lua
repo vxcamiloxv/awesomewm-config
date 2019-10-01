@@ -35,7 +35,7 @@ widget._icon = wibox.widget.imagebox()
 -- helpers:set_draw_method(widget._icon)
 -- }}}
 
--- {{{ Define interactive behavior
+-- {{{ Define interactive behaviour
 widget._icon:buttons(awful.util.table.join(
                         awful.button({ }, 1, function () awful.util.spawn("gnome-control-center power") end)
 ))
@@ -43,6 +43,15 @@ widget._icon:buttons(awful.util.table.join(
 
 -- {{{ Check adapter method
 function widget:check()
+   local adapters = string.gmatch(helpers:run("ls /sys/class/power_supply/"), "%S+")
+   for value in adapters do
+      if value:match("^A") then
+         acAdapter = value
+      elseif value:match("^B") then
+         adapter = value
+      end
+   end
+
    -- Test identifier
    charge = "charge"
    widget.hasbattery = helpers:test("cat /sys/class/power_supply/" .. adapter .. "/" .. charge .. "_now")
@@ -62,13 +71,17 @@ function widget:update()
    local cap = helpers:run("cat /sys/class/power_supply/" ..adapter .. "/" .. charge .. "_full")
    local sta = helpers:run("cat /sys/class/power_supply/" ..adapter .. "/status")
    local ac = helpers:run("cat /sys/class/power_supply/" ..acAdapter .. "/online")
-   
+
    if cur and cap then
-      local acStatus = math.floor(ac)
+      local acStatus = ac ~= "" and math.floor(ac) or 0;
       local battery = math.floor(cur * 100 / cap)
       local colorfg = beautiful.fg_urgent
       local toHibernate = false
-      batterytext = battery .. "% Battery"
+      if acStatus == 1 then
+         batterytext = battery .. "% Battery | AC"
+      else
+         batterytext = battery .. "% Battery"
+      end
       iconpath = config.."/theme/icons/status/battery"
 
       if(battery < 5) then

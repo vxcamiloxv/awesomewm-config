@@ -24,6 +24,8 @@ widget.__index = widget
 function widget:new(args)
    local obj = setmetatable({}, self)
    local defaultBlPath = "/sys/class/backlight/acpi_video0"
+   local amdGpuBlPath = "/sys/class/backlight/amdgpu_bl0"
+   local gmuxBlPath = "/sys/class/backlight/gmux_backlight"
    local intelBlPath = "/sys/class/backlight/intel_backlight"
 
    obj.cmd = args.cmd or "xbacklight"
@@ -35,22 +37,26 @@ function widget:new(args)
       obj.decVal = args.dec or "-dec"
       obj.setVal = args.set or "-set"
       obj.getVal = args.get or "-get"
-      
-   elseif helpers:exists(obj.backlightPath) then
-      obj.max = helpers:run("cat "..obj.backlightPath.."/max_brightness")
-      obj.step = (obj.max / 100) * 3;
-      obj.cmd = nil
-      
+      obj.backlightPath = nil
+
    elseif helpers:exists(intelBlPath) then
       obj.backlightPath = intelBlPath
-      obj.max = helpers:run("cat "..obj.backlightPath.."/max_brightness")
-      obj.step = (obj.max / 100) * 3;
-      obj.cmd = nil
-      
+
+   elseif helpers:exists(gmuxBlPath) then
+      obj.backlightPath = gmuxBlPath
+
+   elseif helpers:exists(amdGpuBlPath) then
+      obj.backlightPath = amdGpuBlPath
+
    else
       obj.cmd = nil
       obj.backlightPath = nil
-      
+   end
+
+   if helpers:exists(obj.backlightPath) then
+      obj.max = helpers:run("cat "..obj.backlightPath.."/max_brightness")
+      obj.step = (obj.max / 100) * 3
+      obj.cmd = nil
    end
 
    -- Create imagebox widget
@@ -123,7 +129,7 @@ function widget:update()
 end
 
 function widget:up()
-   if self.cmd ~= nil then 
+   if self.cmd ~= nil then
       helpers:run(self.cmd.." "..self.incVal.." "..self.step)
    elseif self.backlightPath ~= nil then
       local val = math.floor(helpers:run("cat "..self.backlightPath.."/brightness") + self.step)
@@ -131,13 +137,15 @@ function widget:up()
       if val > math.floor(self.max) or self.brightness > 95 or self:percentage(val) >= 97 then
          val = self.max
       end
-      helpers:run("tee "..self.backlightPath.."/brightness <<< "..val)
+
+      local result = helpers:run("echo "..val.." > "..self.backlightPath.."/brightness")
+
    end
    helpers:delay(function() self:update() end, 0.1)
 end
 
 function widget:down()
-   if self.cmd ~= nil then 
+   if self.cmd ~= nil then
       helpers:run(self.cmd.." "..self.decVal.." "..self.step)
    elseif self.backlightPath ~= nil then
       local val = math.floor(helpers:run("cat "..self.backlightPath.."/brightness") - self.step)
@@ -145,13 +153,13 @@ function widget:down()
       if self:percentage(val) <= 5 then
          val = 0
       end
-      helpers:run("tee "..self.backlightPath.."/brightness <<< "..val)
+      helpers:run("echo "..val.." > "..self.backlightPath.."/brightness")
    end
    helpers:delay(function() self:update() end, 0.1)
 end
 
 function widget:get()
-   if self.cmd ~= nil then 
+   if self.cmd ~= nil then
       return math.floor(helpers:run(self.cmd.." "..self.getVal) or 0)
    elseif self.backlightPath ~= nil then
       local value = helpers:run("cat "..self.backlightPath.."/brightness")
@@ -162,11 +170,11 @@ function widget:get()
 end
 
 function widget:set(val)
-   if self.cmd ~= nil then 
+   if self.cmd ~= nil then
       helpers:run(self.cmd.." "..self.setVal.." "..val)
    elseif self.backlightPath ~= nil then
       val = (self.max / 100) * val;
-      helpers:run("tee "..self.backlightPath.."/brightness <<< "..val)
+      helpers:run("echo "..val.." > "..self.backlightPath.."/brightness")
    end
 end
 

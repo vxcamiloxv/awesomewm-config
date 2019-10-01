@@ -18,6 +18,8 @@ It is primarily targeted at power users, developers and any people who  want to 
 - [Awesome WM 4.x][awesome]
 - [Hack font][hack_font]
 - amixer (alsa-utils)
+- iwconfig (iw)
+#### Optional ####
 - xbacklight (xorg-xbacklight)
 
 Installation
