@@ -990,8 +990,11 @@ awful.rules.rules = {
      }
    },
    -- Custom
-   { rule = { class = "MPlayer" },
+   { rule_any = { class = { "MPlayer", "mpv" } },
      properties = { floating = true }
+   },
+   { rule = { instance = "mps" },
+     properties = { floating = true, screen = 2, ontop = true, width = 300, x = 12, y = 25 }
    },
    { rule = { class = "pinentry" },
      properties = { floating = true }
@@ -999,17 +1002,17 @@ awful.rules.rules = {
    { rule = { class = "Gimp.*" },
      properties = { tag = "6", floating = true }
    },
-   { rule = { instance = "owncloud" },
-     properties = { floating = true }
-   },
-   { rule_any = { class = {"URxvt", ".*ermina.*"} },
+   { rule_any = { class = { "URxvt", ".*ermina.*" } },
      properties = { tag = "2", size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/terminal.png" }
    },
    { rule = { class = "Emacs" },
      properties = { tag = "3", switchtotag = true, size_hints_honor = false }
    },
-   { rule_any = { instance = { "Ranger" }, name = { ".*mc .*", ".*ranger:.*" } },
-     properties = { tag = "6", switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
+   { rule_any = { instance = { "Ranger" }, name = { ".*ranger:.*" } },
+     properties = { tag = "6", screen = 2, switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
+   },
+   { rule_any = { instance = { "Mc" }, name = { ".*mc .*" } },
+     properties = { tag = "6", screen = 1, switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
    },
    { rule_any = { role = { "browser" }, class = { "Epiphany" }},
      properties = { tag = "4", maximized = true }
