@@ -1015,11 +1015,11 @@ awful.rules.rules = {
      properties = { tag = "6", screen = 1, switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
    },
    { rule_any = { role = { "browser" }, class = { "Epiphany" }},
-     properties = { tag = "4", maximized = true }
+     properties = { tag = "4", maximized_vertical = true, maximized_horizontal = true }
    },
-   { rule = { name = ".*weeChat.*" },
+   { rule_any = { instance = { "WeeChat" }, name = { ".*weeChat.*" } },
      properties = {
-        tag = "5", switchtotag = true, icon = "/usr/share/icons/hicolor/32x32/apps/weechat.png"
+        tag = "5", switchtotag = true, maximized_vertical = true, maximized_horizontal = true, icon = "/usr/share/icons/hicolor/32x32/apps/weechat.png"
      }
    },
    { rule_any = { name = {"^Android Emulator*", "^Emulator"} },
