@@ -86,6 +86,10 @@ function helpers:test(cmd)
 end
 
 function helpers:exists(path)
+   if path == nil then
+     return false
+   end
+
    local content = io.open(path, "rb")
    if content then
       content:close()
