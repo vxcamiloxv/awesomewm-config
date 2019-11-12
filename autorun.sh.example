@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+source "`dirname $0`/scripts/run.sh"
+
+# General config
+# ---------------
+# Keyboard layout
+setxkbmap latam
+
+# Composition
+run xcompmgr
+
+# Autorun apps
+# --------------
+run clipmenud
+run urxvtd -q -o
+run udiskie --smart-tray --notify
+run emacs --daemon --no-splash
+run xss-lock -- sflock
