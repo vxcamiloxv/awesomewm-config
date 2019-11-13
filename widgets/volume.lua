@@ -36,6 +36,9 @@ widget._icon:buttons(awful.util.table.join(
 
 -- {{{ Update method
 function widget:update()
+   -- TODO: change amixer to pactl
+   -- see: https://unix.stackexchange.com/questions/132230/read-out-pulseaudio-volume-from-commandline-i-want-pactl-get-sink-volume
+   -- https://gist.github.com/Ropid/3a08d70a807e35c7e8c688d54b725e8e
    local status = helpers:run("amixer sget Master")
    local volume = tonumber(string.match(status, "(%d?%d?%d)%%")) or 0
    volumetext = volume .. "% Volume"

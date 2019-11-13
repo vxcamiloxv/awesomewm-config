@@ -975,6 +975,7 @@ awful.rules.rules = {
         role = {
            "AlarmWindow",  -- Thunderbird's calendar.
            "pop-up",       -- e.g. Developer Tools.
+           "About"
         }
    }, properties = { floating = true }},
 
@@ -994,7 +995,17 @@ awful.rules.rules = {
      properties = { floating = true }
    },
    { rule = { instance = "mps" },
-     properties = { floating = true, screen = 2, ontop = true, width = 300, x = 12, y = 25 }
+     properties = {
+        screen = 2,
+        skip_taskbar = true,
+        floating = true,
+        ontop = true,
+        raise = false,
+        focus = false,
+        width = 300,
+        x = 12,
+        y = 25
+     }
    },
    { rule = { class = "pinentry" },
      properties = { floating = true }
@@ -1006,20 +1017,20 @@ awful.rules.rules = {
      properties = { tag = "2", size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/terminal.png" }
    },
    { rule = { class = "Emacs" },
-     properties = { tag = "3", switchtotag = true, size_hints_honor = false }
+     properties = { tag = "3", switch_to_tags = true, size_hints_honor = false }
    },
    { rule_any = { instance = { "Ranger" }, name = { ".*ranger:.*" } },
-     properties = { tag = "6", screen = 2, switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
+     properties = { tag = "6", screen = 2, switch_to_tags = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
    },
    { rule_any = { instance = { "Mc" }, name = { ".*mc .*" } },
-     properties = { tag = "6", screen = 1, switchtotag = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
+     properties = { tag = "6", screen = 1, switch_to_tags = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
    },
    { rule_any = { role = { "browser" }, class = { "Epiphany" }},
      properties = { tag = "4", maximized_vertical = true, maximized_horizontal = true }
    },
    { rule_any = { instance = { "WeeChat" }, name = { ".*weeChat.*" } },
      properties = {
-        tag = "5", switchtotag = true, maximized_vertical = true, maximized_horizontal = true, icon = "/usr/share/icons/hicolor/32x32/apps/weechat.png"
+        tag = "5", switch_to_tags = true, maximized_vertical = true, maximized_horizontal = true, icon = "/usr/share/icons/hicolor/32x32/apps/weechat.png"
      }
    },
    { rule_any = { name = {"^Android Emulator*", "^Emulator"} },
@@ -1051,7 +1062,7 @@ awful.rules.rules = {
      callback = awful.client.setslave
    },
    { rule = { class = "Kodi" },
-     properties = { tag = "1", screen = 2, fullscreen = true, ontop = true, switchtotag = true }
+     properties = { tag = "1", screen = 2, fullscreen = true, ontop = true, switch_to_tags = true }
    }
 }
 -- }}}

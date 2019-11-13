@@ -22,6 +22,8 @@ It is primarily targeted at power users, developers and any people who  want to 
 
 #### Optional ####
 - xbacklight (xorg-xbacklight)
+- paplay (pulseaudio-utils)
+- maim (for screenshots)
 
 Installation
 --------------
