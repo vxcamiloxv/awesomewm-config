@@ -60,7 +60,6 @@ end
 -- {{{ Variable definitions
 sloppy_focus = false
 notify_suspended = false
-wallmenu = {}
 
 --Configure home path so you dont have too
 home_path  = os.getenv("HOME") .. "/"
@@ -113,7 +112,7 @@ local function client_set_border(c)
 end
 
 local function client_resize (key, c)
-      if c == nil then
+   if c == nil then
       c = client.focus
    end
 
@@ -258,28 +257,14 @@ local function take_screenshot (opts)
    end)
 end
 
-local function wall_load (wall)
+local function load_wallpaper (wall)
    -- TODO: replace io.open with a non-blocking
    local f = io.popen("ln -sfn " .. home_path .. "Pictures/Wallpapers/" .. wall .. " " .. config_path .. "theme/_wall.jpg")
    awesome.restart()
 end
 
-local function wall_menu ()
-   local f = io.popen("ls -1 " .. home_path .. "Pictures/Wallpapers/")
-   for l in f:lines() do
-      local item = { l, function () wall_load(l) end }
-      table.insert(wallmenu, item)
-   end
-   table.insert(wallmenu, {
-                   "Default",
-                   function ()
-                      awful.spawn.with_shell("rm " .. config_path .. "theme/_wall.jpg")
-                      awesome.restart() end})
-   f:close()
-end
-
 local function set_wallpaper(s)
-   -- Wallpaper
+   -- Re-calculate wallpapers size
    if beautiful.wallpaper then
       local wallpaper = beautiful.wallpaper
       -- If wallpaper is a function, call it with the screen
@@ -288,6 +273,25 @@ local function set_wallpaper(s)
       end
       gears.wallpaper.maximized(wallpaper, s, true)
    end
+end
+
+local function get_wallpaper_menu ()
+   wallmenu = {
+      {
+         "Default",
+         function ()
+            awful.spawn.with_shell("rm " .. config_path .. "theme/_wall.jpg")
+            awesome.restart() end
+      }
+   }
+   
+   local f = io.popen("ls -1 " .. home_path .. "Pictures/Wallpapers/")
+   for l in f:lines() do
+      local item = { l, function () load_wallpaper(l) end }
+      table.insert(wallmenu, item)
+   end
+   f:close()
+   return wallmenu
 end
 --}}}
 
@@ -330,10 +334,6 @@ awful.layout.layouts = {
 }
 -- }}}
 
--- {{{ Wallpaper menu
-wall_menu()
--- }}}
-
 -- {{{ Menu
 -- Create a laucher widget and a main menu
 myawesomemenu = {
@@ -354,11 +354,13 @@ mysystemmenu = {
    { "&power off", system_power_off }
 }
 
+mywallpapermenu = get_wallpaper_menu()
+
 mymainmenu = awful.menu({
       items = {
          { "&Awesome", myawesomemenu, beautiful.menu_icon },
          { "&System", mysystemmenu },
-         { "&Wallpapers", wallmenu },
+         { "&Wallpapers", mywallpapermenu },
          { "&Terminal", terminal }
       }
 })
