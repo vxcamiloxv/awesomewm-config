@@ -1,2 +1,5 @@
 # Ignore example config
 autorun*
+
+# Base
+_wall.*
