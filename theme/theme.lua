@@ -111,6 +111,8 @@ theme.taglist_fg_focus                          = "#00FFFF"
 theme.taglist_font                              = "Icons 10"
 
 -- | Titlebar | --
+theme.titlebar_bg_focus                         = base_color
+
 theme.titlebar_close_button_focus               = theme.theme_path .. "/titlebar/close_focus.png"
 theme.titlebar_close_button_normal              = theme.theme_path .. "/titlebar/close_normal.png"
 
