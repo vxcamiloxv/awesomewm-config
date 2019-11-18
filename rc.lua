@@ -257,16 +257,10 @@ local function take_screenshot (opts)
    end)
 end
 
-local function load_wallpaper (wall)
-   -- TODO: replace io.open with a non-blocking
-   local f = io.popen("ln -sfn " .. home_path .. "Pictures/Wallpapers/" .. wall .. " " .. config_path .. "theme/_wall.jpg")
-   awesome.restart()
-end
-
-local function set_wallpaper(s)
+local function set_wallpaper(s, wallpaper)
+   local wallpaper = wallpaper or beautiful.wallpaper
    -- Re-calculate wallpapers size
-   if beautiful.wallpaper then
-      local wallpaper = beautiful.wallpaper
+   if wallpaper then
       -- If wallpaper is a function, call it with the screen
       if type(wallpaper) == "function" then
          wallpaper = wallpaper(s)
@@ -275,22 +269,59 @@ local function set_wallpaper(s)
    end
 end
 
-local function get_wallpaper_menu ()
-   wallmenu = {
-      {
+local function load_wallpaper (wallpaper_path)
+   local wallpaper = config_path .. "theme/_wall.jpg"
+   -- TODO: replace io.open with a non-blocking
+   local ln = io.popen("ln -sfn '" .. wallpaper_path .. "' '" .. config_path .. "theme/_wall.jpg'")
+   ln:close()
+   -- set new wallpaper for all screens
+   for s = 1, screen.count() do
+      set_wallpaper(s, wallpaper)
+   end
+end
+
+local function get_wallpaper_menu (wallpaper_path, is_submenu)
+   local wallpaper_path = wallpaper_path or home_path .. "Pictures/Wallpapers"
+   local wallmenu = {}
+
+   if not is_submenu then
+      local default_item = {
          "Default",
          function ()
             awful.spawn.with_shell("rm " .. config_path .. "theme/_wall.jpg")
-            awesome.restart() end
+            for s = 1, screen.count() do
+               set_wallpaper(s)
+            end
+         end
       }
-   }
-   
-   local f = io.popen("ls -1 " .. home_path .. "Pictures/Wallpapers/")
-   for l in f:lines() do
-      local item = { l, function () load_wallpaper(l) end }
-      table.insert(wallmenu, item)
+      table.insert(wallmenu, default_item)
    end
-   f:close()
+   local files = io.popen("ls -1 --group-directories-first '" .. wallpaper_path .. "'")
+   for line in files:lines() do      
+      local line_len = string.len(line) * 10
+      
+      if string.match(line, "%.png$") or string.match(line ,"%.jp[e]?g$") then
+         local wallpaper_name = line
+         local wallpaper = wallpaper_path .. "/" .. wallpaper_name
+         local item = { wallpaper_name, function () load_wallpaper(wallpaper) end, theme={ width=line_len } }
+         table.insert(wallmenu, item)
+      else
+         local dir_name = line
+         local sub_path = wallpaper_path .. "/" .. dir_name
+         local check = io.open(sub_path, "r")
+         if check ~= nil then
+            local ok, err, code = check:read(1)
+            check:close()
+            if code == 21 then
+               local sub_items = get_wallpaper_menu(sub_path, true)
+               if next(sub_items) ~= nil then
+                  table.insert(wallmenu, { dir_name, sub_items, theme={ width=line_len } })
+               end
+            end
+         end
+      end
+   end
+   files:close()
    return wallmenu
 end
 --}}}
@@ -335,7 +366,7 @@ awful.layout.layouts = {
 -- }}}
 
 -- {{{ Menu
--- Create a laucher widget and a main menu
+-- Create a launcher widget and a main menu
 myawesomemenu = {
    { "&hotkeys", function() return false, hotkeys_popup.show_help end},
    { "&manual", terminal .. " -e man awesome" },
@@ -427,7 +458,7 @@ local tasklist_buttons = awful.util.table.join(
 end))
 
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
-screen.connect_signal("property::geometry", set_wallpaper)
+screen.connect_signal("property::geometry", function(s) set_wallpaper(s) end)
 
 awful.screen.connect_for_each_screen(function(s)
       -- Widgets separators
