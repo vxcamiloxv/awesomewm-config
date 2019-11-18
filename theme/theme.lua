@@ -58,7 +58,7 @@ theme.bg_focus                                  = theme.bg_normal
 theme.bg_minimize                               = theme.bg_normal
 theme.bg_urgent                                 = base_color
 
-theme.fg_normal                                 = "#FFFFFF"
+theme.fg_normal                                 = "#DDDDDD"
 theme.fg_focus                                  = "#00FFFF"
 theme.fg_urgent                                 = "#e0c625"
 theme.fg_minimize                               = "#15abc3"
