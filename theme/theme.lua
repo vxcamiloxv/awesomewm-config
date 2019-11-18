@@ -41,20 +41,24 @@ for i=1, #wall_directories do
    end
 end
 
+-- | Definition  | --
+base_color = "#001214"
+opacity_hex = "CC"
+
 -- | THEME | --
 theme                                           = {}
 theme.theme_path                                = theme_path
 theme.wallpaper                                 = theme_wallpaper
 theme.icon_theme                                = "Papirus-Adapta-Nokto"
-
 theme.font                                      = "Hack 8"
 
-theme.bg_normal                                 = "#001214"
-theme.bg_focus                                  = "#001214"
-theme.bg_urgent                                 = "#001214"
-theme.bg_minimize                               = "#001214"
+-- | Base | --
+theme.bg_normal                                 = base_color..opacity_hex
+theme.bg_focus                                  = theme.bg_normal
+theme.bg_minimize                               = theme.bg_normal
+theme.bg_urgent                                 = base_color
 
-theme.fg_normal                                 = "#aaaaaa"
+theme.fg_normal                                 = "#FFFFFF"
 theme.fg_focus                                  = "#00FFFF"
 theme.fg_urgent                                 = "#e0c625"
 theme.fg_minimize                               = "#15abc3"
@@ -66,7 +70,7 @@ theme.systray_icon_spacing                      = dpi(5)
 -- | Borders | --
 theme.useless_gap                               = dpi(5)
 theme.border_width                              = dpi(2)
-theme.border_normal                             = "#001214"
+theme.border_normal                             = base_color
 theme.border_focus                              = "#00FFFF"
 theme.border_marked                             = "#FFFFFF"
 
@@ -80,14 +84,25 @@ theme.notification_width                        = 300
 theme.notification_icon_size                    = 30
 
 -- | Menu | --
+theme.menu_bg_normal                            = base_color
+theme.menu_bg_focus                             = theme.menu_bg_normal
 theme.menu_icon                                 = theme.theme_path .. "/icons/menu.png"
 theme.menu_submenu_icon                         = theme.theme_path .. "/icons/submenu.png"
-theme.menu_height                               = dpi(15)
+theme.menu_height                               = dpi(16)
 theme.menu_width                                = dpi(100)
 
 -- | Hotkeys help | --
 theme.hotkeys_modifiers_fg                      = "#204143"
 theme.hotkeys_border_color                      = "#00FFFF"
+
+-- | Calendar | --
+theme.calendar_month_bg_color                   = base_color
+theme.calendar_year_bg_color                    = base_color
+
+-- | Tasklist | --
+theme.tasklist_bg_normal                        = base_color.."00"
+theme.tasklist_bg_focus                         = theme.tasklist_bg_normal
+theme.tasklist_fg_normal                        = theme.fg_normal.."CC"
 
 -- | Taglist squares | --
 theme.taglist_squares_sel                       = theme.theme_path .. "/taglist/square_sel.png"
@@ -95,7 +110,7 @@ theme.taglist_squares_unsel                     = theme.theme_path .. "/taglist/
 theme.taglist_fg_focus                          = "#00FFFF"
 theme.taglist_font                              = "Icons 10"
 
--- | Titkebar | --
+-- | Titlebar | --
 theme.titlebar_close_button_focus               = theme.theme_path .. "/titlebar/close_focus.png"
 theme.titlebar_close_button_normal              = theme.theme_path .. "/titlebar/close_normal.png"
 
