@@ -272,6 +272,7 @@ end
 local function load_wallpaper (wallpaper_path)
    local wallpaper = config_path .. "theme/_wall.jpg"
    -- TODO: replace io.open with a non-blocking
+   -- https://awesomewm.org/doc/api/libraries/awful.spawn.html
    local ln = io.popen("ln -sfn '" .. wallpaper_path .. "' '" .. config_path .. "theme/_wall.jpg'")
    ln:close()
    -- set new wallpaper for all screens
@@ -727,7 +728,15 @@ globalkeys = gears.table.join(
 
 
    -- Prompt
-   awful.key({ modkey },            "r", function () awful.screen.focused().mypromptbox:run() end,
+   awful.key({ modkey },            "r",
+      function ()
+         awful.prompt.run {
+            prompt              = "Run: ",
+            textbox             = awful.screen.focused().mypromptbox.widget,
+            completion_callback = awful.completion.shell,
+            history_path        = awful.util.get_cache_dir() .. "/history"
+         }
+      end,
       {description = "run prompt", group = "launcher"}),
 
    awful.key({ modkey,           }, "x",
@@ -911,6 +920,7 @@ clientbuttons = awful.util.table.join(
 -- Set keys
 root.keys(globalkeys)
 -- }}}
+
 function titlebar_add(c)
    -- buttons for the titlebar
    local buttons = gears.table.join(
@@ -1013,7 +1023,7 @@ awful.rules.rules = {
    }, properties = { floating = true }},
 
    -- Add titlebars to normal clients and dialogs
-   { rule_any = { type = { "dialog" }},
+   { rule_any = { type = { "dialog" } },
      except_any = { role = { "notify_dialog" }},
      properties = {
         titlebars_show = true,
@@ -1053,7 +1063,7 @@ awful.rules.rules = {
      properties = { tag = "3", switch_to_tags = true, size_hints_honor = false }
    },
    { rule_any = { instance = { "Ranger" }, name = { ".*ranger:.*" } },
-     properties = { tag = "6", screen = 2, switch_to_tags = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
+     properties = { tag = "6", screen = 2, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
    },
    { rule_any = { instance = { "Mc" }, name = { ".*mc .*" } },
      properties = { tag = "6", screen = 1, switch_to_tags = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
