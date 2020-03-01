@@ -85,7 +85,7 @@ function widget:update()
       wifiMax = tonumber(wifiMax) or 70
       quality = math.floor(wifiMin / wifiMax * 100)
    else
-      local wifi = helpers:run("nmcli -t device wifi")
+      local wifi = helpers:run("nmcli -g IN-USE,SSID,RATE,SIGNAL,BARS,SECURITY device wifi")
       local data = string.match(wifi, "*:(.*)")
       local values = {}
       local i = 0;
@@ -95,11 +95,12 @@ function widget:update()
             values[i] = val
             i = i + 1
          end
+         networktext = values[2]
 
-         if tonumber(values[4]) ~= nil then
+         if tonumber(values[2]) ~= nil then
             connected = values[0]
-            quality = math.floor(values[4] or 0)
-            rate = " | " .. values[3] .. " | " .. values[5]
+            quality = math.floor(values[2] or 0)
+            rate = " | " .. values[1] .. " | " .. values[3]
          end
       end
    end
@@ -107,7 +108,7 @@ function widget:update()
    networktext = quality .. "%"
 
    if quality <= 0 then
-      networktext = " no connected"
+      networktext = " no connected" .. " | " .. adapter
    elseif connected then
       networktext = networktext .. " | " .. connected .. rate
    end
