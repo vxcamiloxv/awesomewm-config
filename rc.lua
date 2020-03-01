@@ -979,6 +979,7 @@ end
 
 -- {{{ Rules
 -- Rules to apply to new clients (through the "manage" signal).
+screen_max = screen:count()
 awful.rules.rules = {
    -- All clients will match this rule.
    { rule = { },
@@ -1063,7 +1064,7 @@ awful.rules.rules = {
      properties = { tag = "3", switch_to_tags = true, size_hints_honor = false }
    },
    { rule_any = { instance = { "Ranger" }, name = { ".*ranger:.*" } },
-     properties = { tag = "6", screen = 2, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
+     properties = { tag = "6", screen = screen_max, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
    },
    { rule_any = { instance = { "Mc" }, name = { ".*mc .*" } },
      properties = { tag = "6", screen = 1, switch_to_tags = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
