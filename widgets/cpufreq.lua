@@ -76,7 +76,9 @@ function fraxcpu:update ()
          end
       end
    end
-   fraxcpu.text:set_markup(string.sub(freqv.ghz, 0, 3).."GHz "..governor)
+   if type(governor) == "string" then
+       fraxcpu.text:set_markup(string.sub(freqv.ghz, 0, 3).."GHz "..governor)
+   end
 end
 
 -- Mouse button bindings for fraxcpu widget

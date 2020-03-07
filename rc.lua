@@ -1041,14 +1041,18 @@ awful.rules.rules = {
    { rule = { instance = "mps" },
      properties = {
         screen = 2,
+        tag = "2",
+        placement = awful.placement.top_left,
         skip_taskbar = true,
         floating = true,
         ontop = true,
-        raise = false,
+        focusable = false,
         focus = false,
-        width = 300,
-        x = 12,
-        y = 25
+        width = 200,
+        honor_padding = true,
+        callback = function(c)
+           c:relative_move(12, 5, c.width, c.height)
+        end
      }
    },
    { rule = { class = "pinentry" },
