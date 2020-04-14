@@ -27,9 +27,6 @@ local mywifi = require("widgets/wifi")
 local mycpufreq = require("widgets/cpufreq")
 
 require("awful.autofocus")
--- Enable hotkeys help widget for VIM and other apps
--- when client with a matching name is opened:
-require("awful.hotkeys_popup.keys")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -140,17 +137,28 @@ local function client_resize (key, c)
    return true
 end
 
-local function tag_view_nonempty (direction, sc)
+local function tag_view_nonempty (direction, s)
    -- Non-empty tag browsing from lain
    -- direction in {-1, 1} <-> {previous, next} non-empty tag
-   local s = sc or awful.screen.focused()
+   local scren = s or awful.screen.focused()
 
-   for i = 1, #s.tags do
-      awful.tag.viewidx(direction, s)
+   for i = 1, #screen.tags do
+      awful.tag.viewidx(direction, screen)
       if #s.clients > 0 then
          return
       end
    end
+end
+
+function unless_gap_resize(size, s, t)
+   local screen = s or awful.screen.focused()
+   local tag = t or screen.selected_tag
+   if size == 0 then
+      tag.gap = beautiful.useless_gap
+   else
+      tag.gap = tag.gap + tonumber(size)
+   end
+   awful.layout.arrange(screen)
 end
 
 local function notify_callback (args)
@@ -584,6 +592,20 @@ globalkeys = gears.table.join(
          tag_view_nonempty(-1)
       end, {description = "focus previous non-empty tag", group = "tag"}),
 
+   -- Unless gaps resize
+   awful.key({ modkey, "Control" }, "+",
+      function ()
+         unless_gap_resize(1)
+      end, {description = "increase unless gap size on current screen and tag", group = "layout"}),
+   awful.key({ modkey, "Control" }, "-",
+      function ()
+         unless_gap_resize(-1)
+      end, {description = "reduce unless gap size on current screen and tag", group = "layout"}),
+   awful.key({ modkey, "Control" }, "0",
+      function ()
+         unless_gap_resize(0)
+      end, {description = "reset unless gap size on current screen and tag", group = "layout"}),
+   
    -- Take a screenshot
    awful.key({                   }, "Print", take_screenshot,
       {description = "print a screenshot", group = "screenshot"}),
