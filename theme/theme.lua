@@ -6,6 +6,7 @@
 
 --]]
 local awful = require("awful")
+local shape = require("gears.shape")
 local xresources = require("beautiful.xresources")
 
 -- Theme basic --
@@ -39,6 +40,11 @@ for i=1, #wall_directories do
       theme_wallpaper = dir .. "/wallpaper.jpg"
       break
    end
+end
+
+-- | Shape definition | --
+local shape_info = function(cr, width, height)
+   shape.infobubble(cr, width, height, 5)
 end
 
 -- | Definition  | --
@@ -92,8 +98,11 @@ theme.menu_height                               = dpi(16)
 theme.menu_width                                = dpi(100)
 
 -- | Hotkeys help | --
-theme.hotkeys_modifiers_fg                      = "#204143"
+theme.hotkeys_bg                                = base_color
+theme.hotkeys_modifiers_fg                      = "#15abc3"
 theme.hotkeys_border_color                      = "#00FFFF"
+theme.hotkeys_group_margin                      = 20
+theme.hotkeys_shape                             = shape_info
 
 -- | Calendar | --
 theme.calendar_month_bg_color                   = base_color
