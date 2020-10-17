@@ -22,6 +22,9 @@ widget.__index = widget
 
 -- {{{ Create brightness widget method
 function widget:new(args)
+   -- TODO: implement just sys and dims
+   -- see: https://gitlab.com/wavexx/acpilight/-/blob/master/xbacklight
+   -- dims: https://github.com/intervigilium/brightd
    local obj = setmetatable({}, self)
    local defaultBlPath = "/sys/class/backlight/acpi_video0"
    local amdGpuBlPath = "/sys/class/backlight/amdgpu_bl0"
@@ -160,9 +163,10 @@ end
 
 function widget:get()
    if self.cmd ~= nil then
-      return math.floor(helpers:run(self.cmd.." "..self.getVal) or 0)
+      local value = tonumber(helpers:run(self.cmd.." "..self.getVal)) or 0
+      return math.floor(value)
    elseif self.backlightPath ~= nil then
-      local value = helpers:run("cat "..self.backlightPath.."/brightness")
+      local value = tonumber(helpers:run("cat "..self.backlightPath.."/brightness"))
       return self:percentage(value)
    else
       return 100
@@ -186,7 +190,8 @@ function widget:popupShow(timeout)
          icon = icon,
          icon_size = 16,
          text =  tooltipText,
-         timeout = timeout, hover_timeout = 0.5,
+         timeout = timeout,
+         hover_timeout = 0.5,
          screen = mouse.screen,
          ignore_suspend = true
    })
