@@ -6,10 +6,10 @@
 
 local awful = require("awful")
 local util = awful.util
-local format = string.format
 local theme = require("beautiful")
 local naughty = require("naughty")
 
+local format = string.format
 local orglendar = { files = {},
                     char_width = nil,
                     text_color = theme.fg_normal or "#FFFFFF",

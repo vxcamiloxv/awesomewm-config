@@ -8,6 +8,7 @@
 
 local awful = require("awful")
 local wibox = require("wibox")
+local gears = require("gears")
 local helpers = require("widgets/helpers")
 
 local fraxcpumenu = {}
@@ -82,7 +83,7 @@ function fraxcpu:update ()
 end
 
 -- Mouse button bindings for fraxcpu widget
-fraxcpu.text:buttons(awful.util.table.join(
+fraxcpu.text:buttons(gears.table.join(
                         awful.button({ }, 1, function () awful.menu.toggle(fraxcpumenu) end),
                         awful.button({ }, 2, function () fraxcpu:update() end),
                         awful.button({ }, 3, function () fraxcpu:update()  end)

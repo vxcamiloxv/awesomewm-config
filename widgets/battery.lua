@@ -10,6 +10,7 @@
 
 local wibox = require("wibox")
 local awful = require("awful")
+local gears = require("gears")
 local naughty = require("naughty")
 local beautiful = require("beautiful")
 local brightness = require("widgets/brightness")
@@ -36,8 +37,14 @@ widget._icon = wibox.widget.imagebox()
 -- }}}
 
 -- {{{ Define interactive behaviour
-widget._icon:buttons(awful.util.table.join(
-                        awful.button({ }, 1, function () awful.util.spawn("lxqt-config-powermanagement") end)
+widget._icon:buttons(gears.table.join(
+                        awful.button({ }, 1, function ()
+                              awful.spawn("lxqt-config-powermanagement", {
+                                             floating  = true,
+                                             tag       = mouse.screen.selected_tag,
+                                             placement = awful.placement.centered,
+                              })
+                        end)
 ))
 -- }}}
 
@@ -123,7 +130,7 @@ function widget:update()
          if(toHibernate) then
             brightness:set(30)
             batterytext = batterytext .. "  - Prepare Hibernate"
-            helpers:delay(function() awful.util.spawn("systemctl hibernate") end, 10)
+            helpers:delay(function() awful.spawn("systemctl hibernate") end, 10)
          end
       end
 

@@ -10,6 +10,7 @@
 
 local wibox = require("wibox")
 local awful = require("awful")
+local gears = require("gears")
 local naughty = require("naughty")
 local helpers = require("widgets/helpers")
 
@@ -28,8 +29,14 @@ widget.text = wibox.widget.textbox()
 widget._icon = wibox.widget.imagebox()
 
 -- {{{ Define interactive behavior
-widget._icon:buttons(awful.util.table.join(
-                        awful.button({ }, 1, function () awful.util.spawn("gnome-control-center network") end)
+widget._icon:buttons(gears.table.join(
+                        awful.button({ }, 1, function ()
+                              awful.spawn("urxvt -e /usr/bin/nmtui", {
+                                             floating  = true,
+                                             tag       = mouse.screen.selected_tag,
+                                             placement = awful.placement.centered,
+                              })
+                        end)
 ))
 -- }}}
 

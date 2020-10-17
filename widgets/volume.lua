@@ -10,6 +10,7 @@
 
 local wibox = require("wibox")
 local awful = require("awful")
+local gears = require("gears")
 local naughty = require("naughty")
 local helpers = require("widgets/helpers")
 
@@ -25,8 +26,14 @@ widget.text = wibox.widget.textbox()
 widget._icon = wibox.widget.imagebox()
 
 -- {{{ Define interactive behaviour
-widget._icon:buttons(awful.util.table.join(
-                        awful.button({ }, 1, function () awful.util.spawn("pavucontrol -t 4") end)
+widget._icon:buttons(gears.table.join(
+                        awful.button({ }, 1, function ()
+                              awful.spawn("pavucontrol -t 4", {
+                                             floating  = true,
+                                             tag       = mouse.screen.selected_tag,
+                                             placement = awful.placement.centered,
+                              })
+                        end)
 ))
 -- }}}
 
@@ -90,19 +97,19 @@ function widget:hidePopup()
 end
 
 function widget:raise()
-   awful.util.spawn("amixer set Master 1%+", false)
+   awful.spawn("amixer set Master 1%+", false)
 
    helpers:delay(widget.update, 0.1)
 end
 
 function widget:lower()
-   awful.util.spawn("amixer set Master 1%-", false)
+   awful.spawn("amixer set Master 1%-", false)
 
    helpers:delay(widget.update, 0.1)
 end
 
 function widget:mute()
-   awful.util.spawn("amixer -D pulse set Master 1+ toggle", false)
+   awful.spawn("amixer -D pulse set Master 1+ toggle", false)
 
    helpers:delay(widget.update, 0.1)
 end
