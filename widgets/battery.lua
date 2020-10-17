@@ -37,7 +37,7 @@ widget._icon = wibox.widget.imagebox()
 
 -- {{{ Define interactive behaviour
 widget._icon:buttons(awful.util.table.join(
-                        awful.button({ }, 1, function () awful.util.spawn("gnome-control-center power") end)
+                        awful.button({ }, 1, function () awful.util.spawn("lxqt-config-powermanagement") end)
 ))
 -- }}}
 
