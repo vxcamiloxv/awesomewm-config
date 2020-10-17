@@ -137,32 +137,31 @@ local function client_resize (key, c)
    return true
 end
 
-local function tag_view_nonempty (direction, s)
+local function tag_view_nonempty (direction, screen)
    -- Non-empty tag browsing from lain
    -- direction in {-1, 1} <-> {previous, next} non-empty tag
-   local scren = s or awful.screen.focused()
+   local s = screen or awful.screen.focused()
 
-   for i = 1, #screen.tags do
-      awful.tag.viewidx(direction, screen)
+   for i = 1, #s.tags do
+      awful.tag.viewidx(direction, s)
       if #s.clients > 0 then
          return
       end
    end
 end
 
-function unless_gap_resize(size, s, t)
-   local screen = s or awful.screen.focused()
-   local tag = t or screen.selected_tag
+function unless_gap_resize(size, screen, tag)
+   local s = screen or awful.screen.focused()
+   local t = tag or s.selected_tag
    if size == 0 then
-      tag.gap = beautiful.useless_gap
+      t.gap = beautiful.useless_gap
    else
-      tag.gap = tag.gap + tonumber(size)
+      t.gap = t.gap + tonumber(size)
    end
-   awful.layout.arrange(screen)
+   awful.layout.arrange(s)
 end
 
 local function notify_callback (args)
-   local should_suspend = false
    if args.freedesktop_hints ~= nil and args.freedesktop_hints.urgency == "\2" then
       args.ignore_suspend = true
    end
@@ -273,7 +272,7 @@ local function set_wallpaper(s, wallpaper)
       if type(wallpaper) == "function" then
          wallpaper = wallpaper(s)
       end
-      gears.wallpaper.maximized(wallpaper, s, true)
+      gears.wallpaper.maximized(wallpaper, s, false)
    end
 end
 
@@ -337,6 +336,7 @@ end
 
 -- Notification
 naughty.config.notify_callback = notify_callback
+naughty.config.defaults.timeout = 8
 
 -- Cyclefocus
 cyclefocus.show_clients = false
@@ -1089,10 +1089,10 @@ awful.rules.rules = {
    { rule = { class = "Emacs" },
      properties = { tag = "3", switch_to_tags = true, size_hints_honor = false }
    },
-   { rule_any = { instance = { "Ranger" }, name = { ".*ranger:.*" } },
+   { rule_any = { instance = { "Lf" }, name = { ".*Lf.*" } },
      properties = { tag = "6", screen = screen_max, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
    },
-   { rule_any = { instance = { "Mc" }, name = { ".*mc .*" } },
+   { rule_any = { instance = { "Mc", "Nnn" }, name = { ".*mc .*", ".*Nnn.*" } },
      properties = { tag = "6", screen = 1, switch_to_tags = true, size_hints_honor = false, icon = "/usr/share/icons/Moka/48x48/apps/file-manager.png" }
    },
    { rule_any = { role = { "browser" }, class = { "Epiphany" }},
@@ -1124,12 +1124,20 @@ awful.rules.rules = {
      properties = { tag = "5", size_hints_honor = false, floating = true }
    },
    { rule = { class = "Pidgin", role = "conversation" },
-     properties = { width = 1000, height = 670, x = 320, y = 55 }},
-   -- {rule = {class = "Pidgin", role = "accounts"},
-   --  properties = {width = 500, height = 500, x = 0, y = 0}},
+     properties = {
+        tag = "5", screen = 1, width = 500, height = 350, placement = awful.placement.top_right,
+        callback = function(c)
+           c:relative_move(320, 10, c.width, c.height)
+        end
+   }},
    { rule = { class = "Pidgin", role = "buddy_list" },
-     properties = { width = 300, height = 670, x = 10, y = 55 },
-     callback = awful.client.setslave
+     properties = {
+        tag = "5", screen = 1, width = 150, height = 350, placement = awful.placement.top_left,
+        callback = function(c)
+           awful.client.setmaster(c)
+           c:relative_move(20, 10, c.width, c.height)
+        end
+     },
    },
    { rule = { class = "Kodi" },
      properties = { tag = "1", screen = 2, fullscreen = true, ontop = true, switch_to_tags = true }
