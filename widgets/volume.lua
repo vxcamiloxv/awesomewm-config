@@ -24,13 +24,9 @@ local iconpath = ""
 widget.text = wibox.widget.textbox()
 widget._icon = wibox.widget.imagebox()
 
--- Change the draw method so icons can be drawn smaller
--- helpers:set_draw_method(widget.icon)
--- }}}
-
 -- {{{ Define interactive behaviour
 widget._icon:buttons(awful.util.table.join(
-                        awful.button({ }, 1, function () awful.util.spawn("gnome-control-center sound") end)
+                        awful.button({ }, 1, function () awful.util.spawn("pavucontrol -t 4") end)
 ))
 -- }}}
 
@@ -94,13 +90,13 @@ function widget:hidePopup()
 end
 
 function widget:raise()
-   awful.util.spawn("amixer set Master 9%+", false)
+   awful.util.spawn("amixer set Master 1%+", false)
 
    helpers:delay(widget.update, 0.1)
 end
 
 function widget:lower()
-   awful.util.spawn("amixer set Master 9%-", false)
+   awful.util.spawn("amixer set Master 1%-", false)
 
    helpers:delay(widget.update, 0.1)
 end
