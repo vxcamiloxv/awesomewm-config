@@ -66,13 +66,12 @@ beautiful.init(config_path .. "theme/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "urxvtc" or "urxvt" or "terminator" or "gnome-terminal" or "xterm"
-editor = os.getenv("EDITOR") or "nano" or "emacs" or "editor"
+editor = os.getenv("EDITOR") or "nano" or "emacs"
 editor_cmd = terminal .. " -e " .. editor
 
 -- user defined
 browser    = "iceweasel"
-browser2   = "inox"
-gui_editor = "gedit"
+browser2   = "firefox"
 graphics   = "gimp"
 musicplr   = terminal .. " -e ncmpcpp "
 
@@ -418,13 +417,8 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 mykeyboardlayout = awful.widget.keyboardlayout()
 
 -- {{{ Wibar
--- Create a textclock widget
-local mytextclock = wibox.widget.textclock()
-local calendar = awful.widget.calendar_popup.month()
-calendar:attach(mytextclock, "tr")
-
 -- Create a wibox for each screen and add it
-local taglist_buttons = awful.util.table.join(
+local taglist_buttons = gears.table.join(
    awful.button({ }, 1, function(t) t:view_only() end),
    awful.button({ modkey }, 1, function(t)
          if client.focus then
@@ -441,7 +435,7 @@ local taglist_buttons = awful.util.table.join(
    awful.button({ }, 5, function(t) awful.tag.viewprev(t.screen) end)
 )
 
-local tasklist_buttons = awful.util.table.join(
+local tasklist_buttons = gears.table.join(
    awful.button({ }, 1, function (c)
          if c == client.focus then
             c.minimized = true
@@ -466,8 +460,17 @@ local tasklist_buttons = awful.util.table.join(
          awful.client.focus.byidx(-1)
 end))
 
--- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
-screen.connect_signal("property::geometry", function(s) set_wallpaper(s) end)
+-- Create a systray widget
+local xresources = require("beautiful.xresources")
+
+local dpi = xresources.apply_dpi
+local mysystray = wibox.widget.systray()
+local mysystraymargin = wibox.container.margin(mysystray, 2, 2, 2, 2)
+
+-- Create a textclock widget
+local mytextclock = wibox.widget.textclock()
+local calendar = awful.widget.calendar_popup.month()
+calendar:attach(mytextclock, "tr")
 
 awful.screen.connect_for_each_screen(function(s)
       -- Widgets separators
@@ -498,7 +501,7 @@ awful.screen.connect_for_each_screen(function(s)
       -- Create an imagebox widget which will contains an icon indicating which layout we're using.
       -- We need one layoutbox per screen.
       s.mylayoutbox = awful.widget.layoutbox(s)
-      s.mylayoutbox:buttons(awful.util.table.join(
+      s.mylayoutbox:buttons(gears.table.join(
                                awful.button({ }, 1, function () awful.layout.inc(layouts, 1) end),
                                awful.button({ }, 3, function () awful.layout.inc(layouts, -1) end),
                                awful.button({ }, 4, function () awful.layout.inc(layouts, 1) end),
@@ -508,10 +511,6 @@ awful.screen.connect_for_each_screen(function(s)
 
       -- Create a tasklist widget
       s.mytasklist = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, tasklist_buttons)
-
-      -- Create a systray widget
-      local mysystray = wibox.widget.systray()
-      local mysystraymargin = wibox.container.margin(mysystray, 0, 0, 2, 2)
 
       -- Create the wibox
       s.mywibox = awful.wibox({ position = "top", screen = s })
@@ -563,7 +562,7 @@ end)
 -- }}}
 
 -- {{{ Mouse bindings
-root.buttons(awful.util.table.join(
+root.buttons(gears.table.join(
                 awful.button({ }, 3, function () mymainmenu:toggle() end),
                 awful.button({ }, 4, awful.tag.viewnext),
                 awful.button({ }, 5, awful.tag.viewprev)
@@ -934,7 +933,7 @@ for i = 1, 9 do
    )
 end
 
-clientbuttons = awful.util.table.join(
+clientbuttons = gears.table.join(
    awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
    awful.button({ modkey }, 1, awful.mouse.client.move),
    awful.button({ modkey }, 3, awful.mouse.client.resize))
@@ -947,13 +946,11 @@ function titlebar_add(c)
    -- buttons for the titlebar
    local buttons = gears.table.join(
       awful.button({ }, 1, function()
-            client.focus = c
-            c:raise()
+            c:emit_signal("request::activate", "titlebar", {raise = true})
             awful.mouse.client.move(c)
       end),
       awful.button({ }, 3, function()
-            client.focus = c
-            c:raise()
+            c:emit_signal("request::activate", "titlebar", {raise = true})
             awful.mouse.client.resize(c)
       end)
    )
@@ -1023,6 +1020,7 @@ awful.rules.rules = {
         instance = {
            "DTA",  -- Firefox addon DownThemAll.
            "copyq",  -- Includes session name in class.
+           "pinentry",
         },
         class = {
            "Arandr",
@@ -1030,6 +1028,7 @@ awful.rules.rules = {
            "Kruler",
            "MessageWin",  -- kalarm.
            "Sxiv",
+           "Tor Browser", -- Needs a fixed window size to avoid fingerprinting by screen size.
            "Wpa_gui",
            "pinentry",
            "veromix",
@@ -1046,7 +1045,7 @@ awful.rules.rules = {
    }, properties = { floating = true }},
 
    -- Add titlebars to normal clients and dialogs
-   { rule_any = { type = { "dialog" } },
+   { rule_any = { type = { "dialog" }},
      except_any = { role = { "notify_dialog" }},
      properties = {
         titlebars_show = true,
@@ -1076,9 +1075,6 @@ awful.rules.rules = {
            c:relative_move(12, 5, c.width, c.height)
         end
      }
-   },
-   { rule = { class = "pinentry" },
-     properties = { floating = true }
    },
    { rule = { class = "Gimp.*" },
      properties = { tag = "6", floating = true }
@@ -1146,6 +1142,9 @@ awful.rules.rules = {
 -- }}}
 
 -- {{{ Signals
+-- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
+screen.connect_signal("property::geometry", function(s) set_wallpaper(s) end)
+
 -- Signal function to execute when a new client appears.
 client.connect_signal(
    "manage", function (c)
@@ -1153,9 +1152,9 @@ client.connect_signal(
       -- i.e. put it at the end of others instead of setting it master.
       -- if not awesome.startup then awful.client.setslave(c) end
 
-      if awesome.startup and
-         not c.size_hints.user_position
-      and not c.size_hints.program_position then
+      if awesome.startup
+         and not c.size_hints.user_position
+         and not c.size_hints.program_position then
          -- Prevent clients from being unreachable after screen count changes.
          awful.placement.no_offscreen(c)
       end
@@ -1170,7 +1169,7 @@ client.connect_signal(
    "mouse::enter", function(c)
       if sloppy_focus and awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
       and awful.client.focus.filter(c) then
-         client.focus = c
+         c:emit_signal("request::activate", "mouse_enter", {raise = false})
       end
 end)
 
