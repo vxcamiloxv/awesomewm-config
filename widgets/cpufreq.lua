@@ -14,11 +14,12 @@ local helpers = require("widgets/helpers")
 local fraxcpumenu = {}
 local fraxcpu = {}
 local governor_state = {
-   ["ondemand\n"]     = "↯",
-   ["powersave\n"]    = "⌁",
-   ["userspace\n"]    = "¤",
-   ["performance\n"]  = "⚡",
-   ["conservative\n"] = "⊚"
+   ["performance"]  = "⚡",
+   ["powersave"]    = "⌁",
+   ["userspace"]    = "¤",
+   ["ondemand"]     = "↯",
+   ["conservative"] = "⚆",
+   ["schedutil"]      = "⏲"
 }
 
 -- Create fraxcpumenu, and add all available governors to it
@@ -28,7 +29,7 @@ if fh ~= nil then
    fh:close()
    local i= 1
    for w in string.gmatch(govstr, "%a+") do
-      local icon = governor_state[w.."\n"] or ""
+      local icon = governor_state[w] or ""
       fraxcpumenu[i] = { icon.."  "..w, "sudo cpupower frequency-set -g "..w}
       i= i + 1
    end
@@ -50,7 +51,7 @@ function fraxcpu:update ()
    }
    -- Get the current frequency and governor
    local freq = tonumber(_cpufreq.scaling_cur_freq)
-   local governor = _cpufreq.scaling_governor
+   local governor = _cpufreq.scaling_governor:gsub("\n", "")
 
    -- Represent the governor as a symbol
    governor = governor_state[governor] or governor or "N/A"
