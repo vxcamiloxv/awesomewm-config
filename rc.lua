@@ -335,7 +335,7 @@ end
 
 -- Notification
 naughty.config.notify_callback = notify_callback
-naughty.config.defaults.timeout = 8
+naughty.config.defaults.timeout = 10
 
 -- Cyclefocus
 cyclefocus.show_clients = false
