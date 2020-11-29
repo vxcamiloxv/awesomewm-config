@@ -173,7 +173,7 @@ local function notify_callback (args)
          return
       end
    end
-   
+
    if naughty.is_suspended() and not notify_suspended then
       naughty.resume()
    end
@@ -304,9 +304,9 @@ local function get_wallpaper_menu (wallpaper_path, is_submenu)
       table.insert(wallmenu, default_item)
    end
    local files = io.popen("ls -1 --group-directories-first '" .. wallpaper_path .. "'")
-   for line in files:lines() do      
+   for line in files:lines() do
       local line_len = string.len(line) * 10
-      
+
       if string.match(line, "%.png$") or string.match(line ,"%.jp[e]?g$") then
          local wallpaper_name = line
          local wallpaper = wallpaper_path .. "/" .. wallpaper_name
@@ -604,7 +604,7 @@ globalkeys = gears.table.join(
       function ()
          unless_gap_resize(0)
       end, {description = "reset unless gap size on current screen and tag", group = "layout"}),
-   
+
    -- Take a screenshot
    awful.key({                   }, "Print", take_screenshot,
       {description = "print a screenshot", group = "screenshot"}),
@@ -729,7 +729,10 @@ globalkeys = gears.table.join(
             notify_suspended = true
             naughty.suspend()
          end
-      end, {description = "enabled/disable notifications", group = "client"}),
+      end, {description = "enabled/disable notifications", group = "awesome"}),
+
+   awful.key({ modkey, "Shift"   }, "c", naughty.destroy_all_notifications,
+      {description = "clear notifications", group = "awesome"}),
 
    -- System
    awful.key({ modkey,           }, "Home", system_lock,
@@ -1102,7 +1105,6 @@ awful.rules.rules = {
    { rule_any = { name = {"^Android Emulator*", "^Emulator"} },
      properties = {
         floating = true,
-        -- skip_taskbar = true, 
         callback = function(c)
            -- force due the behavior in property::size
            c.border_width = 0
@@ -1115,6 +1117,17 @@ awful.rules.rules = {
         skip_taskbar = true,
         focusable = false
      }
+   },
+   {
+      rule = { class = "jetbrains-studio", name="^win[0-9]+$" },
+      properties = {
+         placement = awful.placement.no_offscreen,
+         screen = awful.screen.preferred,
+         border_width = 0,
+         titlebars_enabled = false,
+         titlebars_show = false,
+         focusable = false,
+      }
    },
    { rule = { instance = "Pidgin" },
      properties = { tag = "5", size_hints_honor = false, floating = true }
