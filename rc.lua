@@ -719,7 +719,7 @@ globalkeys = gears.table.join(
       end, {description = "toggle sloppy focus", group = "client"}),
 
    -- Notifications
-   awful.key({ modkey, "Shift"   }, "d",
+   awful.key({ modkey, "Shift"   }, "s",
       function ()
          -- TODO: move to external widget with icon
          if naughty.is_suspended() then
@@ -731,7 +731,7 @@ globalkeys = gears.table.join(
          end
       end, {description = "enabled/disable notifications", group = "awesome"}),
 
-   awful.key({ modkey, "Shift"   }, "c", naughty.destroy_all_notifications,
+   awful.key({ modkey, "Shift"   }, "d", naughty.destroy_all_notifications,
       {description = "clear notifications", group = "awesome"}),
 
    -- System
